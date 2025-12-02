@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
@@ -13,18 +13,87 @@ function App() {
   const [selectedSequence, setSelectedSequence] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  useEffect(() => {
+    fetchUploads();
+  }, []);
+
+  const fetchUploads = async () => {
+    try {
+      const response = await fetch('/api/fasta');
+      if (response.ok) {
+        const data = await response.json();
+        // The backend returns an array of sequences. 
+        // We might need to map them if the structure is slightly different, 
+        // but based on controller.js it seems to match what we need (except maybe 'id' vs '_id').
+        // Let's map _id to id for frontend consistency if needed.
+        const formattedData = data.map(item => ({
+          ...item,
+          id: item._id, // Use MongoDB _id as id
+          timestamp: item.createdAt || new Date().toISOString() // Ensure timestamp exists
+        }));
+        setUploads(formattedData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch uploads", error);
+    }
+  };
+
   const handleUpload = async (file) => {
     setIsProcessing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const result = await parseFasta(file);
-      setUploads(prev => [result, ...prev]);
-      setActiveView('dashboard'); // Redirect to dashboard after upload
+      // Parse locally first to get data, or send file content directly.
+      // The backend expects JSON body with { fasta: string, filename: string }
+      // So we need to read the file text first.
+      const text = await file.text();
+
+      const response = await fetch('/api/fasta', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fasta: text,
+          filename: file.name
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      // result.data contains the new sequence
+      const newUpload = {
+        ...result.data,
+        id: result.data._id
+      };
+
+      setUploads(prev => [newUpload, ...prev]);
+      setActiveView('dashboard');
     } catch (error) {
-      console.error("Failed to parse file", error);
-      alert("Failed to parse file");
+      console.error("Failed to upload file", error);
+      alert("Failed to upload file");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this sequence?")) return;
+
+    try {
+      const response = await fetch(`/api/fasta/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setUploads(prev => prev.filter(item => item.id !== id));
+      } else {
+        alert("Failed to delete sequence");
+      }
+    } catch (error) {
+      console.error("Error deleting sequence:", error);
+      alert("Error deleting sequence");
     }
   };
 
@@ -55,7 +124,7 @@ function App() {
           </>
         );
       case 'reports':
-        return <HistoryView uploads={uploads} onViewReport={handleGenerateReport} />;
+        return <HistoryView uploads={uploads} onViewReport={handleGenerateReport} onDelete={handleDelete} />;
       case 'summary':
         return (
           <div style={{ ...styles.glassPanel, padding: '3rem', textAlign: 'center' }}>

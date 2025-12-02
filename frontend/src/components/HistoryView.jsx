@@ -2,7 +2,7 @@ import React from 'react';
 import { FileText, Eye, Trash2 } from 'lucide-react';
 import { styles, theme } from '../theme';
 
-const HistoryView = ({ uploads, onViewReport }) => {
+const HistoryView = ({ uploads, onViewReport, onDelete }) => {
     if (!uploads || uploads.length === 0) {
         return (
             <div style={{ ...styles.glassPanel, padding: '3rem', textAlign: 'center', color: theme.colors.textMuted }}>
@@ -65,6 +65,20 @@ const HistoryView = ({ uploads, onViewReport }) => {
                                         }}
                                     >
                                         <Eye size={16} /> View
+                                    </button>
+                                    <button
+                                        onClick={() => onDelete(upload.id)}
+                                        style={{
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: theme.colors.accentRed,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem'
+                                        }}
+                                    >
+                                        <Trash2 size={16} /> Delete
                                     </button>
                                 </td>
                             </tr>
