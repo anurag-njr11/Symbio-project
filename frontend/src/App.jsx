@@ -22,14 +22,10 @@ function App() {
       const response = await fetch('/api/fasta');
       if (response.ok) {
         const data = await response.json();
-        // The backend returns an array of sequences. 
-        // We might need to map them if the structure is slightly different, 
-        // but based on controller.js it seems to match what we need (except maybe 'id' vs '_id').
-        // Let's map _id to id for frontend consistency if needed.
         const formattedData = data.map(item => ({
           ...item,
-          id: item._id, // Use MongoDB _id as id
-          timestamp: item.createdAt || new Date().toISOString() // Ensure timestamp exists
+          id: item._id,
+          timestamp: item.createdAt || new Date().toISOString()
         }));
         setUploads(formattedData);
       }

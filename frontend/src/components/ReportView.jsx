@@ -7,6 +7,16 @@ import { styles, theme } from '../theme';
 const ReportView = ({ sequence, onBack }) => {
     if (!sequence) return null;
 
+    const handleDownload = () => {
+        const element = document.createElement("a");
+        const file = new Blob([JSON.stringify(sequence, null, 2)], { type: 'application/json' });
+        element.href = URL.createObjectURL(file);
+        element.download = `${sequence.filename}_report.json`;
+        document.body.appendChild(element); // Required for this to work in FireFox
+        element.click();
+        document.body.removeChild(element);
+    };
+
     return (
         <div className="animate-fade-in">
             <button
@@ -51,7 +61,11 @@ const ReportView = ({ sequence, onBack }) => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                        <button style={styles.btnSecondary} title="Export PDF">
+                        <button
+                            onClick={handleDownload}
+                            style={styles.btnSecondary}
+                            title="Export JSON Report"
+                        >
                             <Download size={20} />
                         </button>
                         <button style={styles.btnSecondary} title="Share Report">

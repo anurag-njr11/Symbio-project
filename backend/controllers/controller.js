@@ -1,5 +1,14 @@
 const Sequence = require('../database/Sequence');
 
+exports.getAll = async (req, res) => {
+    try {
+        const sequences = await Sequence.find().sort({ createdAt: -1 });
+        res.status(200).json(sequences);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 exports.getById = async (req, res) => {
     try {
         const { id } = req.params;
