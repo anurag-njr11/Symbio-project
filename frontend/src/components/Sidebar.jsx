@@ -6,7 +6,7 @@ const Sidebar = ({ activeView, onNavigate }) => {
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'upload', label: 'Upload FASTA', icon: UploadCloud },
-        { id: 'reports', label: 'Metadata Report', icon: FileText },
+        { id: 'reports', label: 'Upload History', icon: FileText },
         { id: 'summary', label: 'Summary', icon: BarChart2 },
     ];
 

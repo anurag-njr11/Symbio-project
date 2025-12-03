@@ -2,10 +2,30 @@ import React from 'react';
 import { ArrowLeft, Download, Share2, FileText } from 'lucide-react';
 import MetadataCard from './MetadataCard';
 import { AlignLeft, Activity, Zap } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { styles, theme } from '../theme';
 
 const ReportView = ({ sequence, onBack }) => {
     if (!sequence) return null;
+
+    // Fix #1: Download button handler
+    const handleDownload = () => {
+        window.location.href = `/api/files/${sequence._id || sequence.id}/download`;
+    };
+
+    // Fix #2: Share button handler
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: `Genomic Report: ${sequence.filename}`,
+                text: `View the genomic analysis report for ${sequence.filename}`,
+                url: `/report/${sequence._id || sequence.id}`
+            }).catch(err => console.log('Error sharing:', err));
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            alert('Share feature is not supported on this browser');
+        }
+    };
 
     return (
         <div className="animate-fade-in">
@@ -51,10 +71,18 @@ const ReportView = ({ sequence, onBack }) => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                        <button style={styles.btnSecondary} title="Export PDF">
+                        <button
+                            onClick={handleDownload}
+                            style={styles.btnSecondary}
+                            title="Download Sequence"
+                        >
                             <Download size={20} />
                         </button>
-                        <button style={styles.btnSecondary} title="Share Report">
+                        <button
+                            onClick={handleShare}
+                            style={styles.btnSecondary}
+                            title="Share Report"
+                        >
                             <Share2 size={20} />
                         </button>
                     </div>
@@ -114,6 +142,36 @@ const ReportView = ({ sequence, onBack }) => {
                         <h3 style={{ marginBottom: '1.5rem', borderBottom: `1px solid ${theme.colors.borderColor}`, paddingBottom: '0.5rem' }}>
                             Composition
                         </h3>
+                        {/* Pie Chart (Fix #5) */}
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <PieChart>
+                                    <Pie
+                                        data={[
+                                            { name: 'A', value: sequence.nucleotide_counts.A },
+                                            { name: 'T', value: sequence.nucleotide_counts.T },
+                                            { name: 'G', value: sequence.nucleotide_counts.G },
+                                            { name: 'C', value: sequence.nucleotide_counts.C }
+                                        ]}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        label={({ name, value }) => `${name}: ${((value / sequence.length) * 100).toFixed(1)}%`}
+                                        outerRadius={80}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                    >
+                                        <Cell fill="#ef4444" />
+                                        <Cell fill="#eab308" />
+                                        <Cell fill="#22c55e" />
+                                        <Cell fill="#3b82f6" />
+                                    </Pie>
+                                    <Tooltip formatter={(value) => `${((value / sequence.length) * 100).toFixed(1)}%`} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Bar Chart (existing) */}
                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px' }}>
                             {Object.entries(sequence.nucleotide_counts).map(([base, count]) => (
                                 <div key={base} style={{ marginBottom: '1rem' }}>

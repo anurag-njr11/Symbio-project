@@ -127,11 +127,28 @@ function App() {
         return <HistoryView uploads={uploads} onViewReport={handleGenerateReport} onDelete={handleDelete} />;
       case 'summary':
         return (
-          <div style={{ ...styles.glassPanel, padding: '3rem', textAlign: 'center' }}>
-            <h3>Project Summary</h3>
+          <div style={{ ...styles.glassPanel, padding: '3rem' }}>
+            <h2 style={{ marginBottom: '2rem' }}>Project Summary</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Sequences</div>
+                <div style={{ fontSize: '2rem', fontWeight: 700 }}>{uploads.length}</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Avg GC Content</div>
+                <div style={{ fontSize: '2rem', fontWeight: 700 }}>
+                  {uploads.length > 0 ? (uploads.reduce((acc, curr) => acc + curr.gc_percent, 0) / uploads.length).toFixed(1) : 0}%
+                </div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Base Pairs</div>
+                <div style={{ fontSize: '2rem', fontWeight: 700 }}>
+                  {uploads.length > 0 ? (uploads.reduce((acc, curr) => acc + curr.length, 0)).toLocaleString() : 0}
+                </div>
+              </div>
+            </div>
             <p style={{ color: theme.colors.textMuted, marginTop: '1rem' }}>
-              This platform allows for the analysis of genomic sequences.
-              Currently tracking {uploads.length} sequences.
+              This platform allows for the analysis of genomic sequences. Upload FASTA files to analyze their properties including GC content, ORF detection, and nucleotide composition.
             </p>
           </div>
         );

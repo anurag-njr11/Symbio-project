@@ -44,10 +44,35 @@ const UploadSection = ({ onUpload }) => {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const handleSubmit = () => {
-        if (file) {
+    const handleSubmit = async () => {
+        if (!file) return;
+
+        // Validate FASTA format before sending to backend (Fix #10)
+        try {
+            const text = await file.text();
+            
+            if (!text.trim().startsWith(">")) {
+                setError('Invalid FASTA: missing header (file must start with >)');
+                return;
+            }
+
+            const lines = text.trim().split('\n');
+            const sequence = lines.slice(1).join('').replace(/\s/g, '');
+
+            if (/[^ATGC]/i.test(sequence)) {
+                setError('Invalid characters in sequence. Only A, T, G, C are allowed.');
+                return;
+            }
+
+            if (!sequence) {
+                setError('Invalid FASTA format: No sequence found');
+                return;
+            }
+
             onUpload(file);
             clearFile();
+        } catch (err) {
+            setError('Error reading file: ' + err.message);
         }
     };
 
@@ -128,6 +153,7 @@ const UploadSection = ({ onUpload }) => {
                     </div>
                 </div>
             )}
+            {error && <p style={{ color: '#ef4444', marginTop: '1rem' }}>{error}</p>}
         </div>
     );
 };

@@ -27,6 +27,10 @@ const sequenceSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  interpretation: {
+    type: String,
+    default: ''
+  },
   nucleotide_counts: {
     A: { type: Number, default: 0 },
     T: { type: Number, default: 0 },
