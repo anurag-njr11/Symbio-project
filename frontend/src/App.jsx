@@ -12,6 +12,7 @@ function App() {
   const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'upload' | 'reports' | 'summary' | 'view_report'
   const [selectedSequence, setSelectedSequence] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [previousView, setPreviousView] = useState('dashboard'); // Track where user came from
 
   useEffect(() => {
     fetchUploads();
@@ -78,32 +79,21 @@ function App() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this sequence?")) return;
+  const handleDelete = (id) => {
+    if (!window.confirm("Are you sure you want to delete this sequence from the view?")) return;
 
-    try {
-      const response = await fetch(`/api/fasta/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setUploads(prev => prev.filter(item => item.id !== id));
-      } else {
-        alert("Failed to delete sequence");
-      }
-    } catch (error) {
-      console.error("Error deleting sequence:", error);
-      alert("Error deleting sequence");
-    }
+    // UI-only deletion - does NOT delete from database
+    setUploads(prev => prev.filter(item => item.id !== id));
   };
 
   const handleGenerateReport = (sequence) => {
+    setPreviousView(activeView); // Remember current view before navigating
     setSelectedSequence(sequence);
     setActiveView('view_report');
   };
 
   const handleBack = () => {
-    setActiveView('dashboard');
+    setActiveView(previousView); // Go back to previous view
     setSelectedSequence(null);
   };
 

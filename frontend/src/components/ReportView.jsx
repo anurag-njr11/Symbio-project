@@ -10,7 +10,7 @@ const ReportView = ({ sequence, onBack }) => {
 
     // Fix #1: Download button handler
     const handleDownload = () => {
-        window.location.href = `/api/files/${sequence._id || sequence.id}/download`;
+        window.location.href = `/api/files/${sequence._id || sequence.id}/report`;
     };
 
     // Fix #2: Share button handler

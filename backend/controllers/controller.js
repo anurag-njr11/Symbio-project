@@ -60,6 +60,62 @@ exports.downloadFile = async (req, res) => {
     }
 };
 
+// Download metadata report as text file
+exports.downloadReport = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const sequence = await Sequence.findById(id);
+        if (!sequence) {
+            return res.status(404).json({ message: 'Sequence not found' });
+        }
+
+        // Generate report content as formatted text
+        const reportContent = `
+===========================================
+GENOMIC SEQUENCE ANALYSIS REPORT
+===========================================
+
+File Information:
+-----------------
+Filename: ${sequence.filename}
+Header: ${sequence.header}
+Analysis Date: ${new Date(sequence.timestamp).toLocaleString()}
+
+Sequence Metrics:
+-----------------
+Sequence Length: ${sequence.length} base pairs
+GC Content: ${sequence.gc_percent}%
+ORF Detected: ${sequence.orf_detected ? 'Yes' : 'No'}
+
+Nucleotide Composition:
+-----------------------
+Adenine (A): ${sequence.nucleotide_counts.A} (${((sequence.nucleotide_counts.A / sequence.length) * 100).toFixed(2)}%)
+Thymine (T): ${sequence.nucleotide_counts.T} (${((sequence.nucleotide_counts.T / sequence.length) * 100).toFixed(2)}%)
+Guanine (G): ${sequence.nucleotide_counts.G} (${((sequence.nucleotide_counts.G / sequence.length) * 100).toFixed(2)}%)
+Cytosine (C): ${sequence.nucleotide_counts.C} (${((sequence.nucleotide_counts.C / sequence.length) * 100).toFixed(2)}%)
+
+Biological Interpretation:
+--------------------------
+${sequence.interpretation}
+
+===========================================
+End of Report
+===========================================
+`.trim();
+
+        // Generate filename for the report
+        const reportFilename = `report-${sequence.filename.replace(/\.(fasta|fa|txt)$/i, '')}.txt`;
+
+        // Send as downloadable text file
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${reportFilename}"`);
+        res.send(reportContent);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 exports.postFasta = async (req, res) => {
     try {
         const { fasta, filename } = req.body;
@@ -100,8 +156,8 @@ exports.postFasta = async (req, res) => {
 
         // ORF detection logic (Fix #7)
         const stops = ["TAA", "TAG", "TGA"];
-        const orf_detected = sequence.toUpperCase().startsWith("ATG") && 
-                            stops.some(stop => sequence.toUpperCase().endsWith(stop));
+        const orf_detected = sequence.toUpperCase().startsWith("ATG") &&
+            stops.some(stop => sequence.toUpperCase().endsWith(stop));
 
         // Generate interpretation (Fix #9)
         const interpretation = generateInterpretation({
@@ -124,9 +180,9 @@ exports.postFasta = async (req, res) => {
 
         await newSequence.save();
 
-        res.status(201).json({ 
-            message: 'Fasta uploaded and saved successfully', 
-            data: newSequence 
+        res.status(201).json({
+            message: 'Fasta uploaded and saved successfully',
+            data: newSequence
         });
     } catch (error) {
         console.error('Error saving sequence:', error);
