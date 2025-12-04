@@ -109,6 +109,7 @@ End of Report
         // Send as downloadable text file
         res.setHeader('Content-Type', 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename="${reportFilename}"`);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
         res.send(reportContent);
     } catch (error) {
         res.status(500).json({ message: error.message });
