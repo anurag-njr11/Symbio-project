@@ -19,7 +19,7 @@ const ReportView = ({ sequence, onBack }) => {
             navigator.share({
                 title: `Genomic Report: ${sequence.filename}`,
                 text: `View the genomic analysis report for ${sequence.filename}`,
-                url: `/report/${sequence._id || sequence.id}`
+                url: `${window.location.origin}/report/${sequence._id || sequence.id}`
             }).catch(err => console.log('Error sharing:', err));
         } else {
             // Fallback for browsers that don't support Web Share API

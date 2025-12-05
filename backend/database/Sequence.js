@@ -40,6 +40,11 @@ const sequenceSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null  // null for guest users
   }
 }, {
   collection: 'sequences'  // Name of your MongoDB collection

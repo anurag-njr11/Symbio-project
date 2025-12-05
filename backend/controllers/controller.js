@@ -16,10 +16,15 @@ function generateInterpretation(data) {
     return text;
 }
 
-// Get all files (Fix #4 - persist upload history)
+// Get all files (filtered by user)
 exports.getAllFiles = async (req, res) => {
     try {
-        const sequences = await Sequence.find().sort({ timestamp: -1 });
+        // Get userId from request header or query
+        const userId = req.query.userId || req.headers['x-user-id'] || null;
+
+        // Filter by userId (null for guest users)
+        const query = userId && userId !== 'null' && userId !== 'guest' ? { userId } : { userId: null };
+        const sequences = await Sequence.find(query).sort({ timestamp: -1 });
         res.status(200).json(sequences);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -119,7 +124,7 @@ End of Report
 
 exports.postFasta = async (req, res) => {
     try {
-        const { fasta, filename } = req.body;
+        const { fasta, filename, userId } = req.body;
 
         if (!fasta) {
             return res.status(400).json({ message: 'FASTA data is required' });
@@ -185,6 +190,10 @@ exports.postFasta = async (req, res) => {
             orf_detected
         });
 
+        // Get userId from request (body, header, or query)
+        const finalUserId = userId || req.headers['x-user-id'] || req.query.userId || null;
+        const userIdToSave = finalUserId && finalUserId !== 'null' && finalUserId !== 'guest' ? finalUserId : null;
+
         const newSequence = new Sequence({
             filename: filename || 'unknown.fasta',
             header,
@@ -193,7 +202,8 @@ exports.postFasta = async (req, res) => {
             gc_percent,
             nucleotide_counts,
             orf_detected,
-            interpretation
+            interpretation,
+            userId: userIdToSave  // Add userId to track ownership
         });
 
         await newSequence.save();
@@ -211,10 +221,21 @@ exports.postFasta = async (req, res) => {
 exports.deleteById = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedSequence = await Sequence.findByIdAndDelete(id);
-        if (!deletedSequence) {
+        const userId = req.query.userId || req.headers['x-user-id'] || null;
+
+        const sequence = await Sequence.findById(id);
+        if (!sequence) {
             return res.status(404).json({ message: 'Sequence not found' });
         }
+
+        // Check if user owns this sequence (skip check for guest users or if no userId)
+        if (userId && userId !== 'null' && userId !== 'guest' && sequence.userId) {
+            if (sequence.userId.toString() !== userId) {
+                return res.status(403).json({ message: 'Not allowed to delete this file' });
+            }
+        }
+
+        await Sequence.findByIdAndDelete(id);
         res.status(200).json({ message: 'Fasta deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
