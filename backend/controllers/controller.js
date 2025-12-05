@@ -7,7 +7,7 @@ function generateInterpretation(data) {
     if (data.gc_percent > 50) {
         text += "This sequence shows high GC content, indicating potentially higher thermal stability. ";
     }
-    if (!data.orf_detected) {
+    if (data.orf_detected === false) {
         text += "No valid ORF was detected, suggesting a non-coding or incomplete region.";
     } else {
         text += "A valid ORF was detected, suggesting a potential protein-coding region.";
@@ -156,9 +156,26 @@ exports.postFasta = async (req, res) => {
         };
 
         // ORF detection logic (Fix #7)
-        const stops = ["TAA", "TAG", "TGA"];
-        const orf_detected = sequence.toUpperCase().startsWith("ATG") &&
-            stops.some(stop => sequence.toUpperCase().endsWith(stop));
+        function detectORF(sequence) {
+            const seq = sequence.toUpperCase();
+            const stops = ["TAA", "TAG", "TGA"];
+
+            for (let frame = 0; frame < 3; frame++) {
+                for (let i = frame; i < seq.length - 2; i += 3) {
+                    if (seq.slice(i, i + 3) === "ATG") { // start codon
+                        for (let j = i + 3; j < seq.length - 2; j += 3) {
+                            if (stops.includes(seq.slice(j, j + 3))) { // in-frame stop codon
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        const orf_detected = detectORF(sequence);
 
         // Generate interpretation (Fix #9)
         const interpretation = generateInterpretation({

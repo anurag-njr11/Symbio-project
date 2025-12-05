@@ -4,15 +4,36 @@ import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import ReportView from './components/ReportView';
 import HistoryView from './components/HistoryView';
+import AuthPage from './components/AuthPage';
 import { parseFasta } from './utils';
 import { GlobalStyles, styles, theme } from './theme';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [uploads, setUploads] = useState([]);
   const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'upload' | 'reports' | 'summary' | 'view_report'
   const [selectedSequence, setSelectedSequence] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [previousView, setPreviousView] = useState('dashboard'); // Track where user came from
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = () => {
+    try {
+      // Check localStorage for user
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.log('Not authenticated');
+    } finally {
+      setAuthChecked(true);
+    }
+  };
 
   useEffect(() => {
     fetchUploads();
@@ -32,7 +53,11 @@ function App() {
           id: item._id, // Use MongoDB _id as id
           timestamp: item.createdAt || new Date().toISOString() // Ensure timestamp exists
         }));
-        setUploads(formattedData);
+
+        // Filter out soft-deleted items from localStorage
+        const deletedIDs = JSON.parse(localStorage.getItem("deletedItems")) || [];
+        const filtered = formattedData.filter(item => !deletedIDs.includes(item._id));
+        setUploads(filtered);
       }
     } catch (error) {
       console.error("Failed to fetch uploads", error);
@@ -84,6 +109,11 @@ function App() {
 
     // UI-only deletion - does NOT delete from database
     setUploads(prev => prev.filter(item => item.id !== id));
+
+    // Track deleted items in localStorage
+    const deletedIDs = JSON.parse(localStorage.getItem("deletedItems")) || [];
+    deletedIDs.push(id);
+    localStorage.setItem("deletedItems", JSON.stringify(deletedIDs));
   };
 
   const handleGenerateReport = (sequence) => {
@@ -95,6 +125,11 @@ function App() {
   const handleBack = () => {
     setActiveView(previousView); // Go back to previous view
     setSelectedSequence(null);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
   const renderContent = () => {
@@ -149,11 +184,31 @@ function App() {
     }
   };
 
+  if (!authChecked) {
+    return (
+      <>
+        <GlobalStyles />
+        <div style={{ ...styles.appContainer, justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ color: theme.colors.textPrimary }}>Loading...</div>
+        </div>
+      </>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <GlobalStyles />
+        <AuthPage onAuthSuccess={(userData) => setUser(userData)} />
+      </>
+    );
+  }
+
   return (
     <>
       <GlobalStyles />
       <div style={styles.appContainer}>
-        <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} />
+        <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} user={user} onLogout={handleLogout} />
         <main style={styles.mainContent}>
           {renderContent()}
         </main>
