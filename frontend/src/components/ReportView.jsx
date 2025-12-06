@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, Download, Share2, FileText } from 'lucide-react';
 import MetadataCard from './MetadataCard';
 import { AlignLeft, Activity, Zap } from 'lucide-react';
@@ -129,11 +130,19 @@ const ReportView = ({ sequence, onBack }) => {
 
                             <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', marginTop: '2rem' }}>
                                 <h4 style={{ marginBottom: '1rem', color: theme.colors.accentCyan }}>AI Summary</h4>
-                                <p style={{ fontStyle: 'italic', color: theme.colors.textMuted }}>
-                                    "This sequence shows characteristics consistent with {sequence.gc_percent > 60 ? 'GC-rich organisms such as certain bacteria or thermophiles' : 'standard genomic DNA'}.
-                                    The nucleotide distribution is {Math.abs(sequence.nucleotide_counts.A - sequence.nucleotide_counts.T) < sequence.length * 0.1 ? 'balanced' : 'skewed'},
-                                    indicating potential biological significance in..."
-                                </p>
+                                <div style={{ fontStyle: 'italic', color: theme.colors.textMuted, lineHeight: '1.6' }}>
+                                    {sequence.interpretation ? (
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({ node, ...props }) => <p style={{ margin: 0 }} {...props} />
+                                            }}
+                                        >
+                                            {sequence.interpretation}
+                                        </ReactMarkdown>
+                                    ) : (
+                                        "Interpretation not available."
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,19 +1,40 @@
 const Sequence = require('../database/Sequence');
 
 // Generate textual biological interpretation (Fix #9)
-function generateInterpretation(data) {
-    let text = `The analyzed sequence ${data.filename} contains ${data.length} base pairs. `;
+async function generateInterpretation(data) {
+    try {
+        const prompt = `
+        As a bioinformatics expert, provide a concise (2-3 sentences) biological interpretation for this DNA sequence:
+        
+        Filename: ${data.filename}
+        Length: ${data.length} bp
+        GC Content: ${data.gc_percent.toFixed(2)}%
+        ORF Detected: ${data.orf_detected ? 'Yes' : 'No'}
+        Nucleotide Counts: A=${data.nucleotide_counts.A}, T=${data.nucleotide_counts.T}, G=${data.nucleotide_counts.G}, C=${data.nucleotide_counts.C}
 
-    if (data.gc_percent > 50) {
-        text += "This sequence shows high GC content, indicating potentially higher thermal stability. ";
-    }
-    if (data.orf_detected === false) {
-        text += "No valid ORF was detected, suggesting a non-coding or incomplete region.";
-    } else {
-        text += "A valid ORF was detected, suggesting a potential protein-coding region.";
-    }
+        Explain what the GC content implies about stability and what the ORF status suggests about coding potential. 
+        Do not use markdown headers or bullet points, just a paragraph.
+        `;
 
-    return text;
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        console.error("AI Interpretation failed, falling back to static:", error);
+        // Fallback to static text
+        let text = `The analyzed sequence ${data.filename} contains ${data.length} base pairs. `;
+        if (data.gc_percent > 50) {
+            text += "This sequence shows high GC content, indicating potentially higher thermal stability. ";
+        }
+        if (data.orf_detected === false) {
+            text += "No valid ORF was detected, suggesting a non-coding or incomplete region.";
+        } else {
+            text += "A valid ORF was detected, suggesting a potential protein-coding region.";
+        }
+        return text;
+    }
 }
 
 // Get all files (filtered by user)
@@ -183,11 +204,12 @@ exports.postFasta = async (req, res) => {
         const orf_detected = detectORF(sequence);
 
         // Generate interpretation (Fix #9)
-        const interpretation = generateInterpretation({
+        const interpretation = await generateInterpretation({
             filename,
             length,
             gc_percent,
-            orf_detected
+            orf_detected,
+            nucleotide_counts // Pass this for better AI context
         });
 
         // Get userId from request (body, header, or query)
