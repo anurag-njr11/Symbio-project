@@ -2,26 +2,30 @@ import React from 'react';
 
 export const theme = {
   colors: {
-    bgDark: '#f8fafc', // Light background (Slate 50)
-    bgPanel: '#ffffff', // White panels
+    bgDark: '#f0f4f8', // Light AliceBlue/Slate 100 - clean and bright
+    bgPanel: '#ffffff', // White
     primaryBlue: '#2563eb',
     primaryPurple: '#7c3aed',
     accentCyan: '#06b6d4',
     accentGreen: '#10b981',
-    textMain: '#0f172a', // Dark text (Slate 900)
-    textMuted: '#64748b', // Muted text (Slate 500)
-    borderColor: '#e2e8f0', // Light border (Slate 200)
-    glassBg: 'rgba(255, 255, 255, 0.9)', // More opaque white for light mode
-    glassBorder: 'rgba(0, 0, 0, 0.05)',
+    accentRed: '#ef4444',
+    textMain: '#020617', // Deep Slate 950 (Almost Black) for High Contrast
+    textMuted: '#475569', // Slate 600 (Dark Grey) for readability
+    borderColor: '#cbd5e1', // Slate 300 (Visible Border)
+    glassBg: 'rgba(255, 255, 255, 0.95)', // Nearly opaque for contrast vs background
+    glassBorder: 'rgba(59, 130, 246, 0.1)', // Subtle blue tint on border
   },
   gradients: {
     main: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-    bg: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)', // Subtle light gradient
-    text: 'linear-gradient(to right, #2563eb, #7c3aed)', // Darker gradient for text
+    bg: 'linear-gradient(to bottom right, #f0f4f8, #e2e8f0)', // High contrast light gradient
+    cardBlue: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0.02))',
+    cardPurple: 'linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(255, 255, 255, 0.02))',
+    cardGreen: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(255, 255, 255, 0.02))',
+    cardCyan: 'linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(255, 255, 255, 0.02))',
   },
   shadows: {
-    glass: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // Softer shadow
-    hover: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    glass: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    glassHover: '0 15px 30px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', // Deeper hover shadow
   },
   fonts: {
     main: "'Inter', system-ui, -apple-system, sans-serif",
@@ -29,6 +33,7 @@ export const theme = {
 };
 
 export const styles = {
+  // ... existing styles ...
   glassPanel: {
     background: theme.colors.glassBg,
     backdropFilter: 'blur(12px)',
@@ -36,6 +41,27 @@ export const styles = {
     border: `1px solid ${theme.colors.glassBorder}`,
     boxShadow: theme.shadows.glass,
     borderRadius: '16px',
+    transition: 'all 0.3s ease', // Smooth transition for global panels
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'separate',
+    borderSpacing: '0',
+    marginTop: '1rem',
+  },
+  th: {
+    textAlign: 'left',
+    padding: '1rem',
+    color: theme.colors.textMuted,
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    borderBottom: `1px solid ${theme.colors.borderColor}`,
+  },
+  td: {
+    padding: '1rem',
+    borderBottom: `1px solid rgba(0,0,0,0.05)`,
+    fontSize: '0.9rem',
+    color: theme.colors.textMain,
   },
   btnPrimary: {
     background: theme.gradients.main,
@@ -45,10 +71,11 @@ export const styles = {
     borderRadius: '8px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', // Bouncy transition
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
+    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
   },
   btnSecondary: {
     background: 'transparent',
@@ -58,96 +85,59 @@ export const styles = {
     borderRadius: '8px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', // Bouncy transition
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
   },
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '2rem',
-  },
-  textGradient: {
-    background: theme.gradients.text,
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-  },
-  tabContainer: {
-    display: 'flex',
-    gap: '1rem',
-    marginBottom: '2rem',
-    borderBottom: `1px solid ${theme.colors.borderColor}`,
-    paddingBottom: '1rem',
-  },
-  tab: (isActive) => ({
-    background: 'transparent',
-    border: 'none',
-    color: isActive ? theme.colors.primaryBlue : theme.colors.textMuted,
-    fontWeight: 600,
-    fontSize: '1rem',
-    cursor: 'pointer',
-    padding: '0.5rem 1rem',
-    borderBottom: isActive ? `2px solid ${theme.colors.primaryBlue}` : '2px solid transparent',
-    transition: 'all 0.2s ease',
-  }),
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    color: theme.colors.textMain,
-  },
-  th: {
-    textAlign: 'left',
-    padding: '1rem',
-    borderBottom: `1px solid ${theme.colors.borderColor}`,
-    color: theme.colors.textMuted,
-    fontWeight: 600,
-  },
-  td: {
-    padding: '1rem',
-    borderBottom: `1px solid ${theme.colors.glassBorder}`,
-  },
-  // New Layout Styles
   appContainer: {
     display: 'flex',
     minHeight: '100vh',
+    position: 'relative',
+    zIndex: 1, // Above background
+  },
+  mainContent: {
+    flex: 1,
+    padding: '2rem',
+    marginLeft: '260px', // Match sidebar width
+    width: 'calc(100% - 260px)',
+    transition: 'all 0.3s ease',
   },
   sidebar: {
-    width: '250px',
-    background: theme.colors.bgPanel,
-    borderRight: `1px solid ${theme.colors.borderColor}`,
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    height: '100vh',
+    width: '260px',
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderRight: `1px solid ${theme.colors.glassBorder}`,
     padding: '2rem 1rem',
     display: 'flex',
     flexDirection: 'column',
-    position: 'fixed',
-    height: '100vh',
-    top: 0,
-    left: 0,
-  },
-  mainContent: {
-    marginLeft: '250px',
-    flex: 1,
-    padding: '2rem',
-    maxWidth: 'calc(100vw - 250px)',
+    zIndex: 50,
   },
   navItem: (isActive) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    color: isActive ? 'white' : theme.colors.textMuted,
-    background: isActive ? theme.gradients.main : 'transparent',
-    cursor: 'pointer',
-    marginBottom: '0.5rem',
-    transition: 'all 0.2s ease',
-    fontWeight: 500,
-    border: 'none',
     width: '100%',
+    padding: '0.75rem 1rem',
+    border: 'none',
+    borderRadius: '12px',
+    background: isActive ? theme.gradients.main : 'transparent',
+    color: isActive ? 'white' : theme.colors.textMuted,
+    fontSize: '0.95rem',
+    fontWeight: isActive ? 600 : 500,
+    cursor: 'pointer',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     textAlign: 'left',
+    marginBottom: '0.25rem',
+    boxShadow: isActive ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
   }),
   metricCard: {
-    background: theme.colors.glassBg,
+    background: theme.colors.glassBg, // Will be overridden by card gradients
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     border: `1px solid ${theme.colors.glassBorder}`,
@@ -158,6 +148,7 @@ export const styles = {
     flexDirection: 'column',
     justifyContent: 'space-between',
     height: '100%',
+    cursor: 'default', // Changed to default
   }
 };
 
@@ -184,24 +175,32 @@ export const GlobalStyles = () => (
     .animate-fade-in {
       animation: fadeIn 0.5s ease-out forwards;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    .animate-pulse {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    /* Hover effects for buttons handled via JS events or simple classes if needed, 
-       but for pure JS we can use onMouseEnter/Leave or keep simple CSS classes for pseudo-states 
-       in this style block */
+    /* Button Hover Effects */
     .btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
       filter: brightness(1.1);
-      transform: translateY(-1px);
-      box-shadow: ${theme.shadows.hover};
     }
+    .btn-primary:active {
+      transform: translateY(0) scale(0.98);
+    }
+    
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: ${theme.colors.textMuted};
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px) scale(1.02);
+      border-color: ${theme.colors.primaryBlue};
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .btn-secondary:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Table Row Hover */
+    .table-row {
+      transition: background 0.2s ease;
+    }
+    .table-row:hover {
+      background: rgba(37, 99, 235, 0.03);
     }
   `}</style>
 );

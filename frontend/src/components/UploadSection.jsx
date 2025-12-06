@@ -1,11 +1,24 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, FileText, X, CheckCircle } from 'lucide-react';
 import { styles, theme } from '../theme';
+import gsap from 'gsap';
 
 const UploadSection = ({ onUpload }) => {
     const [file, setFile] = useState(null);
     const [error, setError] = useState('');
     const fileInputRef = useRef(null);
+    const dropZoneRef = useRef(null);
+    const fileCardRef = useRef(null);
+
+    // Animate file card entry
+    useEffect(() => {
+        if (file && fileCardRef.current) {
+            gsap.fromTo(fileCardRef.current,
+                { opacity: 0, y: 20, scale: 0.9 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.7)" }
+            );
+        }
+    }, [file]);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -30,27 +43,45 @@ const UploadSection = ({ onUpload }) => {
 
     const handleDrop = (e) => {
         e.preventDefault();
+        gsap.to(dropZoneRef.current, { scale: 1, borderColor: theme.colors.borderColor, duration: 0.2 });
         const selectedFile = e.dataTransfer.files[0];
         validateAndSetFile(selectedFile);
     };
 
     const handleDragOver = (e) => {
         e.preventDefault();
+        gsap.to(dropZoneRef.current, { scale: 1.02, borderColor: theme.colors.primaryBlue, duration: 0.2 });
     };
 
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        gsap.to(dropZoneRef.current, { scale: 1, borderColor: theme.colors.borderColor, duration: 0.2 });
+    }
+
     const clearFile = () => {
-        setFile(null);
-        setError('');
-        if (fileInputRef.current) fileInputRef.current.value = '';
+        gsap.to(fileCardRef.current, {
+            opacity: 0,
+            scale: 0.9,
+            duration: 0.2,
+            onComplete: () => {
+                setFile(null);
+                setError('');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        });
     };
 
     const handleSubmit = async () => {
         if (!file) return;
 
+        // Animate button click
+        const btn = document.getElementById('process-btn');
+        if (btn) gsap.to(btn, { scale: 0.95, yoyo: true, repeat: 1, duration: 0.1 });
+
         // Validate FASTA format before sending to backend (Fix #10)
         try {
             const text = await file.text();
-            
+
             if (!text.trim().startsWith(">")) {
                 setError('Invalid FASTA: missing header (file must start with >)');
                 return;
@@ -70,7 +101,7 @@ const UploadSection = ({ onUpload }) => {
             }
 
             onUpload(file);
-            clearFile();
+            // Don't clear immediately, let parent handle view switch
         } catch (err) {
             setError('Error reading file: ' + err.message);
         }
@@ -85,8 +116,10 @@ const UploadSection = ({ onUpload }) => {
 
             {!file ? (
                 <div
+                    ref={dropZoneRef}
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
                     onClick={() => fileInputRef.current.click()}
                     style={{
                         border: `2px dashed ${theme.colors.borderColor}`,
@@ -94,9 +127,11 @@ const UploadSection = ({ onUpload }) => {
                         padding: '3rem',
                         textAlign: 'center',
                         cursor: 'pointer',
-                        transition: 'all 0.2s ease',
+                        transition: 'box-shadow 0.2s ease',
                         backgroundColor: 'rgba(255,255,255,0.02)'
                     }}
+                    onMouseEnter={() => gsap.to(dropZoneRef.current, { backgroundColor: 'rgba(255,255,255,0.05)', duration: 0.3 })}
+                    onMouseLeave={() => gsap.to(dropZoneRef.current, { backgroundColor: 'rgba(255,255,255,0.02)', duration: 0.3 })}
                 >
                     <input
                         type="file"
@@ -111,14 +146,17 @@ const UploadSection = ({ onUpload }) => {
                     {error && <p style={{ color: '#ef4444', marginTop: '1rem' }}>{error}</p>}
                 </div>
             ) : (
-                <div style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                }}>
+                <div
+                    ref={fileCardRef}
+                    style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                    }}
+                >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{
                             background: 'rgba(16, 185, 129, 0.1)',
@@ -140,12 +178,17 @@ const UploadSection = ({ onUpload }) => {
                         <button
                             onClick={clearFile}
                             style={{ ...styles.btnSecondary, padding: '0.5rem', borderColor: 'transparent', color: theme.colors.textMuted }}
+                            onMouseEnter={e => gsap.to(e.currentTarget, { scale: 1.1, color: theme.colors.accentRed, duration: 0.2 })}
+                            onMouseLeave={e => gsap.to(e.currentTarget, { scale: 1, color: theme.colors.textMuted, duration: 0.2 })}
                         >
                             <X size={20} />
                         </button>
                         <button
+                            id="process-btn"
                             onClick={handleSubmit}
                             style={styles.btnPrimary}
+                            onMouseEnter={e => gsap.to(e.currentTarget, { scale: 1.05, boxShadow: '0 4px 12px rgba(37,99,235,0.3)', duration: 0.2 })}
+                            onMouseLeave={e => gsap.to(e.currentTarget, { scale: 1, boxShadow: 'none', duration: 0.2 })}
                         >
                             <CheckCircle size={18} />
                             Process Sequence

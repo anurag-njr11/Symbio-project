@@ -11,6 +11,7 @@ import ReactMarkdown from 'react-markdown';
 import ChatBot from './components/ChatBot';
 import AnimatedBackground from './components/AnimatedBackground';
 import gsap from 'gsap';
+import { Sparkles, Dna, Database, Activity } from 'lucide-react';
 
 const SummaryView = () => {
   const [summary, setSummary] = useState('');
@@ -61,42 +62,146 @@ const SummaryView = () => {
     }
   };
 
-  return (
-    <div style={{ ...styles.glassPanel, padding: '3rem' }}>
-      <h2 style={{ marginBottom: '2rem' }}>Project Summary</h2>
+  useEffect(() => {
+    if (!loading) {
+      gsap.from(".summary-card", {
+        y: 30,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.15,
+        ease: "back.out(1.2)"
+      });
+    }
+  }, [loading]);
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Sequences</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.count}</div>
+  return (
+    <div style={{ ...styles.glassPanel, padding: '3rem', minHeight: '80vh', position: 'relative', overflow: 'hidden' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: '3rem', position: 'relative', zIndex: 1 }}>
+        <h2 style={{
+          fontSize: '2.5rem',
+          marginBottom: '0.5rem',
+          background: theme.gradients.main,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          display: 'inline-block'
+        }}>
+          Project Analytics
+        </h2>
+        <p style={{ color: theme.colors.textMuted, fontSize: '1.1rem' }}>
+          AI-driven insights and statistics for your sequences
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+
+        {/* Card 1 */}
+        <div className="summary-card" style={{
+          background: theme.gradients.cardBlue,
+          padding: '2rem',
+          borderRadius: '20px',
+          border: `1px solid ${theme.colors.glassBorder}`,
+          position: 'relative'
+        }}>
+          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
+            <Database size={48} color={theme.colors.primaryBlue} />
+          </div>
+          <div style={{ color: theme.colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>TOTAL SEQUENCES</div>
+          <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.primaryBlue }}>
+            {stats.count}
+          </div>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: theme.colors.textMuted }}>
+            Uploaded files
+          </div>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Avg GC Content</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.avgGc}%</div>
+
+        {/* Card 2 */}
+        <div className="summary-card" style={{
+          background: theme.gradients.cardPurple,
+          padding: '2rem',
+          borderRadius: '20px',
+          border: `1px solid ${theme.colors.glassBorder}`,
+          position: 'relative'
+        }}>
+          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
+            <Activity size={48} color={theme.colors.primaryPurple} />
+          </div>
+          <div style={{ color: theme.colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>AVG GC CONTENT</div>
+          <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.primaryPurple }}>
+            {stats.avgGc}%
+          </div>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: theme.colors.textMuted }}>
+            Nucleotide composition
+          </div>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Base Pairs</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.totalBp.toLocaleString()}</div>
+
+        {/* Card 3 */}
+        <div className="summary-card" style={{
+          background: theme.gradients.cardGreen,
+          padding: '2rem',
+          borderRadius: '20px',
+          border: `1px solid ${theme.colors.glassBorder}`,
+          position: 'relative'
+        }}>
+          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
+            <Dna size={48} color={theme.colors.accentGreen} />
+          </div>
+          <div style={{ color: theme.colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>TOTAL BASE PAIRS</div>
+          <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.accentGreen }}>
+            {stats.totalBp.toLocaleString()}
+          </div>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: theme.colors.textMuted }}>
+            Combined length
+          </div>
         </div>
       </div>
 
-      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '12px', border: `1px solid ${theme.colors.border}` }}>
-        <h3 style={{ marginBottom: '1rem', color: theme.colors.accentCyan }}>AI Analysis</h3>
+      {/* AI Analysis Section */}
+      <div className="summary-card" style={{
+        background: 'rgba(255,255,255,0.4)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '24px',
+        border: `1px solid ${theme.colors.primaryPurple}30`, // Subtle purple border
+        padding: '3rem',
+        boxShadow: '0 20px 40px -10px rgba(124, 58, 237, 0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{
+            background: theme.gradients.main,
+            padding: '0.8rem',
+            borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 16px -4px rgba(37, 99, 235, 0.3)'
+          }}>
+            <Sparkles size={24} color="white" />
+          </div>
+          <h3 style={{ fontSize: '1.5rem', margin: 0, background: theme.gradients.main, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            AI Research Insights
+          </h3>
+        </div>
+
         {loading ? (
-          <div className="animate-pulse" style={{ color: theme.colors.textMuted }}>Generating insight from your data...</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', color: theme.colors.textMuted }}>
+            <Sparkles className="animate-spin" size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+            <div className="animate-pulse">Analyzing sequence data...</div>
+          </div>
         ) : error ? (
-          <div style={{ color: theme.colors.accentRed }}>{error}</div>
+          <div style={{ color: theme.colors.accentRed, padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
+            {error}
+          </div>
         ) : (
-          <div style={{ lineHeight: '1.6', color: theme.colors.textSecondary, whiteSpace: 'pre-line' }}>
+          <div style={{ lineHeight: '1.8', color: theme.colors.textSecondary }}>
             <ReactMarkdown
               components={{
-                h1: ({ node, ...props }) => <h1 style={{ color: theme.colors.accentCyan, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
-                h2: ({ node, ...props }) => <h2 style={{ color: theme.colors.accentCyan, marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1.5rem' }} {...props} />,
-                h3: ({ node, ...props }) => <h3 style={{ color: theme.colors.textPrimary, marginTop: '0.8rem', marginBottom: '0.4rem', fontSize: '1.2rem' }} {...props} />,
-                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.6' }} {...props} />,
-                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
-                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
-                strong: ({ node, ...props }) => <strong style={{ color: theme.colors.accentPurple }} {...props} />
+                h1: ({ node, ...props }) => <h1 style={{ color: theme.colors.primaryBlue, marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.8rem' }} {...props} />,
+                h2: ({ node, ...props }) => <h2 style={{ color: theme.colors.primaryPurple, marginTop: '1.5rem', marginBottom: '0.8rem', fontSize: '1.4rem' }} {...props} />,
+                h3: ({ node, ...props }) => <h3 style={{ color: theme.colors.textMain, marginTop: '1.2rem', marginBottom: '0.5rem', fontSize: '1.1rem', fontWeight: 700 }} {...props} />,
+                p: ({ node, ...props }) => <p style={{ marginBottom: '1.2rem', fontSize: '1.05rem' }} {...props} />,
+                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1.2rem' }} {...props} />,
+                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem', paddingLeft: '0.5rem' }} {...props} />,
+                strong: ({ node, ...props }) => <strong style={{ color: theme.colors.primaryBlue, fontWeight: 600 }} {...props} />
               }}
             >
               {summary}
@@ -135,11 +240,12 @@ function App() {
   }, []);
 
   // Fetch uploads whenever auth is checked/user changes or view changes to dashboard/history
+  // Fetch uploads whenever auth is checked/user changes or view changes to dashboard/history
   useEffect(() => {
-    if (user && (activeView === 'dashboard' || activeView === 'reports' || activeView === 'summary')) {
+    if (authChecked && (activeView === 'dashboard' || activeView === 'reports' || activeView === 'summary')) {
       fetchUploads();
     }
-  }, [user, activeView]);
+  }, [authChecked, user, activeView]);
 
   const checkAuth = () => {
     try {

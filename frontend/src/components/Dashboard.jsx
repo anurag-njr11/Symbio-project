@@ -3,28 +3,65 @@ import { UploadCloud, FileCode, Activity, Clock, Eye } from 'lucide-react';
 import { styles, theme } from '../theme';
 import gsap from 'gsap';
 
-const MetricCard = ({ title, value, icon: Icon, color, index }) => (
-    <div className="metric-card" style={styles.metricCard}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <span style={{ color: theme.colors.textMuted, fontSize: '0.9rem' }}>{title}</span>
-            <Icon size={18} color={color} style={{ opacity: 0.8 }} />
-        </div>
-        <div style={{ fontSize: '2rem', fontWeight: 700 }}>{value}</div>
-    </div>
-);
+const MetricCard = ({ title, value, icon: Icon, color, index }) => {
+    // Select gradient based on index or color
+    const getGradient = (idx) => {
+        const grads = [theme.gradients.cardBlue, theme.gradients.cardPurple, theme.gradients.cardCyan, theme.gradients.cardGreen];
+        return grads[idx % grads.length] || theme.colors.glassBg;
+    };
 
-const Dashboard = ({ uploads, onGenerateReport }) => {
+    return (
+        <div
+            className="metric-card"
+            style={{
+                ...styles.metricCard,
+                background: getGradient(index)
+            }}
+            onMouseEnter={(e) => {
+                gsap.to(e.currentTarget, {
+                    y: -8,
+                    boxShadow: `0 20px 40px -10px ${color}40`, // Stronger colored glow
+                    scale: 1.03, // Slight scale up
+                    borderColor: color,
+                    duration: 0.4,
+                    ease: "power3.out"
+                });
+            }}
+            onMouseLeave={(e) => {
+                gsap.to(e.currentTarget, {
+                    y: 0,
+                    boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
+                    scale: 1,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            }}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <span style={{ color: theme.colors.textMuted, fontSize: '0.9rem' }}>{title}</span>
+                <Icon size={18} color={color} style={{ opacity: 0.8 }} />
+            </div>
+            <div style={{ fontSize: '2rem', fontWeight: 700 }}>{value}</div>
+        </div>
+    );
+};
+
+const Dashboard = ({ uploads = [], onGenerateReport }) => {
     const containerRef = useRef(null);
     const tableRef = useRef(null);
 
+    // Safety check for uploads
+    const safeUploads = Array.isArray(uploads) ? uploads : [];
+
     // Calculate metrics
-    const totalUploads = uploads.length;
-    const orfCount = uploads.filter(u => u.orf_detected).length;
+    const totalUploads = safeUploads.length;
+    const orfCount = safeUploads.filter(u => u.orf_detected).length;
     const avgGc = totalUploads > 0
-        ? (uploads.reduce((acc, curr) => acc + parseFloat(curr.gc_percent), 0) / totalUploads).toFixed(1)
+        ? (safeUploads.reduce((acc, curr) => acc + parseFloat(curr.gc_percent || 0), 0) / totalUploads).toFixed(1)
         : 0;
 
     // Mock data for "Recent Activity" if uploads are low, to match screenshot vibe
+
     const recentActivity = totalUploads > 0 ? totalUploads : 0;
 
     useEffect(() => {
@@ -32,17 +69,26 @@ const Dashboard = ({ uploads, onGenerateReport }) => {
             gsap.from(".metric-card", {
                 y: 30,
                 opacity: 0,
-                duration: 0.6,
-                stagger: 0.1,
-                ease: "power2.out"
+                duration: 0.8,
+                stagger: 0.15,
+                ease: "back.out(1.7)"
             });
 
             gsap.from(tableRef.current, {
-                y: 30,
+                y: 40,
                 opacity: 0,
-                duration: 0.6,
-                delay: 0.3,
-                ease: "power2.out"
+                duration: 0.8,
+                delay: 0.4,
+                ease: "power3.out"
+            });
+
+            // Animate decorative blob
+            gsap.to(".decorative-blob", {
+                y: 30,
+                duration: 4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
             });
         }, containerRef);
 
@@ -50,7 +96,20 @@ const Dashboard = ({ uploads, onGenerateReport }) => {
     }, []);
 
     return (
-        <div ref={containerRef} className="animate-fade-in">
+        <div ref={containerRef} className="animate-fade-in" style={{ position: 'relative' }}>
+            {/* Decorative Element */}
+            <div className="decorative-blob" style={{
+                position: 'absolute',
+                top: '-50px',
+                right: '-50px',
+                width: '300px',
+                height: '300px',
+                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(0,0,0,0) 70%)',
+                borderRadius: '50%',
+                pointerEvents: 'none',
+                zIndex: -1
+            }} />
+
             <h2 style={{ marginBottom: '2rem' }}>Dashboard</h2>
 
             {/* Metrics Row */}
@@ -106,8 +165,8 @@ const Dashboard = ({ uploads, onGenerateReport }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {uploads.map((upload) => (
-                                    <tr key={upload.id}>
+                                {safeUploads.map((upload) => (
+                                    <tr key={upload.id} className="table-row">
                                         <td style={styles.td}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 <FileCode size={16} color={theme.colors.textMuted} />

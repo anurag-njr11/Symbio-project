@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FileText, Eye, Trash2 } from 'lucide-react';
 import { styles, theme } from '../theme';
+import gsap from 'gsap';
 
 const HistoryView = ({ uploads, onViewReport, onDelete }) => {
+    const tableRef = useRef(null);
+
+    useEffect(() => {
+        if (uploads && uploads.length > 0) {
+            gsap.fromTo(".history-row",
+                { opacity: 0, x: -20 },
+                { opacity: 1, x: 0, stagger: 0.1, duration: 0.5, ease: "power2.out" }
+            );
+        }
+    }, [uploads]);
+
     if (!uploads || uploads.length === 0) {
         return (
             <div style={{ ...styles.glassPanel, padding: '3rem', textAlign: 'center', color: theme.colors.textMuted }}>
@@ -16,7 +28,7 @@ const HistoryView = ({ uploads, onViewReport, onDelete }) => {
     return (
         <div style={{ ...styles.glassPanel, padding: '2rem' }}>
             <h2 style={{ marginBottom: '1.5rem' }}>Upload History</h2>
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto' }} ref={tableRef}>
                 <table style={styles.table}>
                     <thead>
                         <tr>
@@ -30,7 +42,7 @@ const HistoryView = ({ uploads, onViewReport, onDelete }) => {
                     </thead>
                     <tbody>
                         {uploads.map((upload) => (
-                            <tr key={upload.id}>
+                            <tr key={upload.id} className="history-row" style={{ opacity: 0 }}>
                                 <td style={styles.td}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <FileText size={16} color={theme.colors.primaryBlue} />
@@ -63,6 +75,8 @@ const HistoryView = ({ uploads, onViewReport, onDelete }) => {
                                             alignItems: 'center',
                                             gap: '0.25rem'
                                         }}
+                                        onMouseEnter={e => gsap.to(e.currentTarget, { scale: 1.1, duration: 0.2 })}
+                                        onMouseLeave={e => gsap.to(e.currentTarget, { scale: 1, duration: 0.2 })}
                                     >
                                         <Eye size={16} /> View
                                     </button>
@@ -77,6 +91,8 @@ const HistoryView = ({ uploads, onViewReport, onDelete }) => {
                                             alignItems: 'center',
                                             gap: '0.25rem'
                                         }}
+                                        onMouseEnter={e => gsap.to(e.currentTarget, { scale: 1.1, duration: 0.2 })}
+                                        onMouseLeave={e => gsap.to(e.currentTarget, { scale: 1, duration: 0.2 })}
                                     >
                                         <Trash2 size={16} /> Delete
                                     </button>
