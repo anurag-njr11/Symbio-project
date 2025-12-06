@@ -4,6 +4,7 @@ import MetadataCard from './MetadataCard';
 import { AlignLeft, Activity, Zap } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { styles, theme } from '../theme';
+import ChartsSection from './ux/ChartsSection';
 
 const ReportView = ({ sequence, onBack }) => {
     const [aiSummaryHovered, setAiSummaryHovered] = React.useState(false);
@@ -336,6 +337,10 @@ const ReportView = ({ sequence, onBack }) => {
                                 );
                             })}
                         </div>
+                    </div>
+                    {/* Advanced Genomic Analysis Charts */}
+                    <div style={{ marginTop: '1.5rem' }}>
+                        <ChartsSection sequence={sequence} />
                     </div>
                 </div>
             </div>

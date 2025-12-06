@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import ReportView from './components/ReportView';
 import HistoryView from './components/HistoryView';
 import AuthPage from './components/AuthPage';
+import GSAPDecorations from './components/ux/GSAPDecorations';
 import { parseFasta } from './utils';
 import { GlobalStyles, styles, theme } from './theme';
 import ReactMarkdown from 'react-markdown';
@@ -400,49 +401,8 @@ function App() {
     <>
       <GlobalStyles />
       <div style={{ ...styles.appContainer, position: 'relative', overflow: 'hidden' }}>
-        {/* Light biology-themed floating particles */}
-        <div style={{
-          position: 'fixed',
-          top: '15%',
-          left: '10%',
-          width: '300px',
-          height: '300px',
-          background: `radial-gradient(circle, ${theme.colors.pastelBlue}, transparent)`,
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          animation: 'floatSlow 15s ease-in-out infinite',
-          pointerEvents: 'none',
-          zIndex: 0,
-          opacity: 0.4,
-        }} />
-        <div style={{
-          position: 'fixed',
-          bottom: '20%',
-          right: '15%',
-          width: '350px',
-          height: '350px',
-          background: `radial-gradient(circle, ${theme.colors.pastelPurple}, transparent)`,
-          borderRadius: '50%',
-          filter: 'blur(70px)',
-          animation: 'floatSlow 18s ease-in-out infinite reverse',
-          pointerEvents: 'none',
-          zIndex: 0,
-          opacity: 0.4,
-        }} />
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          right: '5%',
-          width: '200px',
-          height: '200px',
-          background: `radial-gradient(circle, ${theme.colors.pastelCyan}, transparent)`,
-          borderRadius: '50%',
-          filter: 'blur(50px)',
-          animation: 'float 12s ease-in-out infinite',
-          pointerEvents: 'none',
-          zIndex: 0,
-          opacity: 0.3,
-        }} />
+        {/* GSAP-powered floating biology particles */}
+        <GSAPDecorations />
 
         <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} user={user} onLogout={handleLogout} />
         <main style={{ ...styles.mainContent, position: 'relative', zIndex: 1 }}>

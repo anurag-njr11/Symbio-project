@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dna } from 'lucide-react';
 import { styles, theme } from '../theme';
+import GSAPDecorations from './ux/GSAPDecorations';
 
 const AuthPage = ({ onAuthSuccess }) => {
     const [isSignUp, setIsSignUp] = useState(false);
@@ -55,44 +56,24 @@ const AuthPage = ({ onAuthSuccess }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `linear-gradient(135deg, ${theme.colors.bgPrimary} 0%, #0a0e27 50%, #1a1f3a 100%)`,
+            background: theme.gradients.bg,
             padding: '2rem',
             position: 'relative',
             overflow: 'hidden'
         }}>
-            {/* Animated background elements */}
-            <div style={{
-                position: 'absolute',
-                top: '10%',
-                left: '10%',
-                width: '300px',
-                height: '300px',
-                background: `radial-gradient(circle, ${theme.colors.accentCyan}20, transparent)`,
-                borderRadius: '50%',
-                filter: 'blur(60px)',
-                animation: 'float 6s ease-in-out infinite'
-            }} />
-            <div style={{
-                position: 'absolute',
-                bottom: '10%',
-                right: '10%',
-                width: '400px',
-                height: '400px',
-                background: `radial-gradient(circle, ${theme.colors.accentPurple}20, transparent)`,
-                borderRadius: '50%',
-                filter: 'blur(80px)',
-                animation: 'float 8s ease-in-out infinite reverse'
-            }} />
+            {/* GSAP-powered floating biology particles */}
+            <GSAPDecorations />
 
             <div style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: theme.colors.glassBgLight,
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: `1px solid ${theme.colors.glassBorder}`,
                 borderRadius: '24px',
                 maxWidth: '480px',
                 width: '100%',
                 padding: '3rem 2.5rem',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px rgba(99, 102, 241, 0.1)',
+                boxShadow: theme.shadows.glass,
                 position: 'relative',
                 zIndex: 1
             }}>
@@ -176,8 +157,8 @@ const AuthPage = ({ onAuthSuccess }) => {
                                 style={{
                                     width: '100%',
                                     padding: '0.9rem 1.1rem',
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                                    background: 'rgba(255, 255, 255, 0.8)',
+                                    border: `1.5px solid ${theme.colors.glassBorder}`,
                                     borderRadius: '12px',
                                     color: theme.colors.textPrimary,
                                     fontSize: '1rem',
@@ -187,13 +168,13 @@ const AuthPage = ({ onAuthSuccess }) => {
                                 }}
                                 placeholder="Enter your full name"
                                 onFocus={(e) => {
-                                    e.target.style.borderColor = theme.colors.accentCyan;
-                                    e.target.style.background = 'rgba(255, 255, 255, 0.08)';
-                                    e.target.style.boxShadow = `0 0 0 3px ${theme.colors.accentCyan}20`;
+                                    e.target.style.borderColor = theme.colors.primaryBlue;
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.95)';
+                                    e.target.style.boxShadow = `0 0 0 3px ${theme.colors.primaryBlue}20`;
                                 }}
                                 onBlur={(e) => {
-                                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                    e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                                    e.target.style.borderColor = theme.colors.glassBorder;
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.8)';
                                     e.target.style.boxShadow = 'none';
                                 }}
                             />
@@ -219,8 +200,8 @@ const AuthPage = ({ onAuthSuccess }) => {
                             style={{
                                 width: '100%',
                                 padding: '0.9rem 1.1rem',
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                                background: 'rgba(255, 255, 255, 0.8)',
+                                border: `1.5px solid ${theme.colors.glassBorder}`,
                                 borderRadius: '12px',
                                 color: theme.colors.textPrimary,
                                 fontSize: '1rem',
@@ -230,13 +211,13 @@ const AuthPage = ({ onAuthSuccess }) => {
                             }}
                             placeholder="you@example.com"
                             onFocus={(e) => {
-                                e.target.style.borderColor = theme.colors.accentCyan;
-                                e.target.style.background = 'rgba(255, 255, 255, 0.08)';
-                                e.target.style.boxShadow = `0 0 0 3px ${theme.colors.accentCyan}20`;
+                                e.target.style.borderColor = theme.colors.primaryBlue;
+                                e.target.style.background = 'rgba(255, 255, 255, 0.95)';
+                                e.target.style.boxShadow = `0 0 0 3px ${theme.colors.primaryBlue}20`;
                             }}
                             onBlur={(e) => {
-                                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                                e.target.style.borderColor = theme.colors.glassBorder;
+                                e.target.style.background = 'rgba(255, 255, 255, 0.8)';
                                 e.target.style.boxShadow = 'none';
                             }}
                         />
@@ -261,8 +242,8 @@ const AuthPage = ({ onAuthSuccess }) => {
                             style={{
                                 width: '100%',
                                 padding: '0.9rem 1.1rem',
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                                background: 'rgba(255, 255, 255, 0.8)',
+                                border: `1.5px solid ${theme.colors.glassBorder}`,
                                 borderRadius: '12px',
                                 color: theme.colors.textPrimary,
                                 fontSize: '1rem',
@@ -272,13 +253,13 @@ const AuthPage = ({ onAuthSuccess }) => {
                             }}
                             placeholder="Enter your password"
                             onFocus={(e) => {
-                                e.target.style.borderColor = theme.colors.accentCyan;
-                                e.target.style.background = 'rgba(255, 255, 255, 0.08)';
-                                e.target.style.boxShadow = `0 0 0 3px ${theme.colors.accentCyan}20`;
+                                e.target.style.borderColor = theme.colors.primaryBlue;
+                                e.target.style.background = 'rgba(255, 255, 255, 0.95)';
+                                e.target.style.boxShadow = `0 0 0 3px ${theme.colors.primaryBlue}20`;
                             }}
                             onBlur={(e) => {
-                                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                                e.target.style.borderColor = theme.colors.glassBorder;
+                                e.target.style.background = 'rgba(255, 255, 255, 0.8)';
                                 e.target.style.boxShadow = 'none';
                             }}
                         />
