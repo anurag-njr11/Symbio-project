@@ -1,35 +1,204 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import ReportView from './components/ReportView';
 import HistoryView from './components/HistoryView';
+import AuthPage from './components/AuthPage';
 import { parseFasta } from './utils';
 import { GlobalStyles, styles, theme } from './theme';
+import ReactMarkdown from 'react-markdown';
+import ChatBot from './components/ChatBot';
+import AnimatedBackground from './components/AnimatedBackground';
+import gsap from 'gsap';
 
-function App() {
-  const [uploads, setUploads] = useState([]);
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'upload' | 'reports' | 'summary' | 'view_report'
-  const [selectedSequence, setSelectedSequence] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+const SummaryView = () => {
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({ count: 0, avgGc: 0, totalBp: 0 });
 
   useEffect(() => {
-    fetchUploads();
+    fetchSummary();
   }, []);
+
+  const fetchSummary = async () => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || null;
+
+      // Fetch stats
+      const url = userId ? `/api/fasta?userId=${userId}` : '/api/fasta';
+      const response = await fetch(url, { headers: { 'x-user-id': userId || '' } });
+      let uploads = [];
+      if (response.ok) {
+        uploads = await response.json();
+        const count = uploads.length;
+        const avgGc = count > 0 ? (uploads.reduce((acc, curr) => acc + curr.gc_percent, 0) / count).toFixed(1) : 0;
+        const totalBp = count > 0 ? uploads.reduce((acc, curr) => acc + curr.length, 0) : 0;
+        setStats({ count, avgGc, totalBp });
+      }
+
+      // Fetch AI Summary
+      const summaryResponse = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId || '' })
+      });
+
+      if (summaryResponse.ok) {
+        const data = await summaryResponse.json();
+        setSummary(data.summary);
+      } else {
+        setError('Failed to generate summary');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('An error occurred while fetching the summary');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ ...styles.glassPanel, padding: '3rem' }}>
+      <h2 style={{ marginBottom: '2rem' }}>Project Summary</h2>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Sequences</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.count}</div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Avg GC Content</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.avgGc}%</div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Base Pairs</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.totalBp.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '12px', border: `1px solid ${theme.colors.border}` }}>
+        <h3 style={{ marginBottom: '1rem', color: theme.colors.accentCyan }}>AI Analysis</h3>
+        {loading ? (
+          <div className="animate-pulse" style={{ color: theme.colors.textMuted }}>Generating insight from your data...</div>
+        ) : error ? (
+          <div style={{ color: theme.colors.accentRed }}>{error}</div>
+        ) : (
+          <div style={{ lineHeight: '1.6', color: theme.colors.textSecondary, whiteSpace: 'pre-line' }}>
+            <ReactMarkdown
+              components={{
+                h1: ({ node, ...props }) => <h1 style={{ color: theme.colors.accentCyan, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
+                h2: ({ node, ...props }) => <h2 style={{ color: theme.colors.accentCyan, marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1.5rem' }} {...props} />,
+                h3: ({ node, ...props }) => <h3 style={{ color: theme.colors.textPrimary, marginTop: '0.8rem', marginBottom: '0.4rem', fontSize: '1.2rem' }} {...props} />,
+                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.6' }} {...props} />,
+                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
+                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
+                strong: ({ node, ...props }) => <strong style={{ color: theme.colors.accentPurple }} {...props} />
+              }}
+            >
+              {summary}
+            </ReactMarkdown>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [uploads, setUploads] = useState([]);
+  const [activeView, setActiveView] = useState('dashboard');
+  const [selectedSequence, setSelectedSequence] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [previousView, setPreviousView] = useState('dashboard');
+
+  const appRef = useRef(null);
+
+  useEffect(() => {
+    checkAuth();
+    checkForPublicReport();
+
+    // Animate app entry
+    if (appRef.current) {
+      gsap.from(appRef.current, {
+        opacity: 0,
+        y: 20,
+        duration: 0.8,
+        ease: 'power3.out'
+      });
+    }
+  }, []);
+
+  // Fetch uploads whenever auth is checked/user changes or view changes to dashboard/history
+  useEffect(() => {
+    if (user && (activeView === 'dashboard' || activeView === 'reports' || activeView === 'summary')) {
+      fetchUploads();
+    }
+  }, [user, activeView]);
+
+  const checkAuth = () => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.log('Not authenticated');
+    } finally {
+      setAuthChecked(true);
+    }
+  };
+
+  const checkForPublicReport = async () => {
+    const path = window.location.pathname;
+    const reportMatch = path.match(/^\/report\/([a-f0-9]+)$/i);
+
+    if (reportMatch) {
+      const reportId = reportMatch[1];
+      try {
+        const response = await fetch(`/api/fasta/${reportId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSelectedSequence({ ...data, id: data._id });
+          setActiveView('view_report');
+          setAuthChecked(true); // Allow viewing without login
+        }
+      } catch (error) {
+        console.error('Failed to load public report', error);
+        setAuthChecked(true);
+      }
+    }
+  };
 
   const fetchUploads = async () => {
     try {
-      const response = await fetch('/api/fasta');
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || null;
+
+      // For guest users, only show uploads from localStorage
+      if (!user || user.role === 'guest' || user.email === 'guest') {
+        const guestUploads = JSON.parse(localStorage.getItem('guestUploads')) || [];
+        setUploads(guestUploads);
+        return;
+      }
+
+      // For registered users, fetch from server with userId filter
+      const url = userId ? `/api/fasta?userId=${userId}` : '/api/fasta';
+      const response = await fetch(url, {
+        headers: { 'x-user-id': userId || '' }
+      });
       if (response.ok) {
         const data = await response.json();
-        // The backend returns an array of sequences. 
-        // We might need to map them if the structure is slightly different, 
-        // but based on controller.js it seems to match what we need (except maybe 'id' vs '_id').
-        // Let's map _id to id for frontend consistency if needed.
         const formattedData = data.map(item => ({
           ...item,
-          id: item._id, // Use MongoDB _id as id
-          timestamp: item.createdAt || new Date().toISOString() // Ensure timestamp exists
+          id: item._id,
+          timestamp: item.createdAt || new Date().toISOString()
         }));
         setUploads(formattedData);
       }
@@ -41,19 +210,41 @@ function App() {
   const handleUpload = async (file) => {
     setIsProcessing(true);
     try {
-      // Parse locally first to get data, or send file content directly.
-      // The backend expects JSON body with { fasta: string, filename: string }
-      // So we need to read the file text first.
       const text = await file.text();
+      const storedUser = localStorage.getItem('user');
+      const currentUser = storedUser ? JSON.parse(storedUser) : user;
+      const userId = currentUser?.id || currentUser?._id || null;
 
+      // For guest users
+      if (!currentUser || currentUser.role === 'guest' || currentUser.email === 'guest') {
+        const parsedData = parseFasta(text, file.name);
+        const guestUploads = JSON.parse(localStorage.getItem('guestUploads')) || [];
+        const newUpload = {
+          id: Date.now().toString(),
+          _id: Date.now().toString(),
+          filename: file.name,
+          ...parsedData,
+          timestamp: new Date().toISOString()
+        };
+        guestUploads.unshift(newUpload);
+        localStorage.setItem('guestUploads', JSON.stringify(guestUploads));
+        setUploads(guestUploads);
+        setActiveView('dashboard');
+        setIsProcessing(false);
+        return;
+      }
+
+      // For registered users
       const response = await fetch('/api/fasta', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': userId || ''
         },
         body: JSON.stringify({
           fasta: text,
-          filename: file.name
+          filename: file.name,
+          userId
         }),
       });
 
@@ -62,7 +253,6 @@ function App() {
       }
 
       const result = await response.json();
-      // result.data contains the new sequence
       const newUpload = {
         ...result.data,
         id: result.data._id
@@ -79,32 +269,50 @@ function App() {
   };
 
   const handleDelete = async (id) => {
+    const storedUser = localStorage.getItem('user');
+    const currentUser = storedUser ? JSON.parse(storedUser) : user;
+
     if (!window.confirm("Are you sure you want to delete this sequence?")) return;
 
+    if (!currentUser || currentUser.role === 'guest') {
+      const guestUploads = JSON.parse(localStorage.getItem('guestUploads')) || [];
+      const filtered = guestUploads.filter(item => item.id !== id);
+      localStorage.setItem('guestUploads', JSON.stringify(filtered));
+      setUploads(prev => prev.filter(item => item.id !== id));
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/fasta/${id}`, {
+      const userId = currentUser.id || currentUser._id;
+      const response = await fetch(`/api/fasta/${id}?userId=${userId}`, {
         method: 'DELETE',
+        headers: { 'x-user-id': userId }
       });
 
       if (response.ok) {
         setUploads(prev => prev.filter(item => item.id !== id));
       } else {
-        alert("Failed to delete sequence");
+        alert('Failed to delete');
       }
     } catch (error) {
-      console.error("Error deleting sequence:", error);
-      alert("Error deleting sequence");
+      console.error('Failed to delete', error);
     }
   };
 
   const handleGenerateReport = (sequence) => {
+    setPreviousView(activeView);
     setSelectedSequence(sequence);
     setActiveView('view_report');
   };
 
   const handleBack = () => {
-    setActiveView('dashboard');
+    setActiveView(previousView);
     setSelectedSequence(null);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
   const renderContent = () => {
@@ -126,15 +334,7 @@ function App() {
       case 'reports':
         return <HistoryView uploads={uploads} onViewReport={handleGenerateReport} onDelete={handleDelete} />;
       case 'summary':
-        return (
-          <div style={{ ...styles.glassPanel, padding: '3rem', textAlign: 'center' }}>
-            <h3>Project Summary</h3>
-            <p style={{ color: theme.colors.textMuted, marginTop: '1rem' }}>
-              This platform allows for the analysis of genomic sequences.
-              Currently tracking {uploads.length} sequences.
-            </p>
-          </div>
-        );
+        return <SummaryView />;
       case 'view_report':
         return <ReportView sequence={selectedSequence} onBack={handleBack} />;
       default:
@@ -142,14 +342,52 @@ function App() {
     }
   };
 
+  if (!authChecked) {
+    return (
+      <>
+        <GlobalStyles />
+        <div style={{ ...styles.appContainer, justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ color: theme.colors.textPrimary }}>Loading...</div>
+        </div>
+      </>
+    );
+  }
+
+  // Public Report View
+  if (!user && activeView === 'view_report' && selectedSequence) {
+    return (
+      <>
+        <GlobalStyles />
+        <div style={styles.appContainer}>
+          <main style={{ ...styles.mainContent, marginLeft: 0, width: '100%' }}>
+            {renderContent()}
+          </main>
+        </div>
+      </>
+    );
+  }
+
+  // Auth Page
+  if (!user) {
+    return (
+      <>
+        <GlobalStyles />
+        <AnimatedBackground />
+        <AuthPage onAuthSuccess={(userData) => setUser(userData)} />
+      </>
+    );
+  }
+
   return (
     <>
       <GlobalStyles />
-      <div style={styles.appContainer}>
-        <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} />
+      <AnimatedBackground />
+      <div style={styles.appContainer} ref={appRef}>
+        <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} user={user} onLogout={handleLogout} />
         <main style={styles.mainContent}>
           {renderContent()}
         </main>
+        <ChatBot currentView={activeView} />
       </div>
     </>
   );

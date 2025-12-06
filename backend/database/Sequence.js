@@ -27,6 +27,10 @@ const sequenceSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  interpretation: {
+    type: String,
+    default: ''
+  },
   nucleotide_counts: {
     A: { type: Number, default: 0 },
     T: { type: Number, default: 0 },
@@ -36,6 +40,11 @@ const sequenceSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null  // null for guest users
   }
 }, {
   collection: 'sequences'  // Name of your MongoDB collection
