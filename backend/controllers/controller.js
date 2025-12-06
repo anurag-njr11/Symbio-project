@@ -288,3 +288,39 @@ exports.generateSummary = async (req, res) => {
         res.status(500).json({ message: 'Failed to generate summary', error: error.message });
     }
 };
+
+exports.chatWithBot = async (req, res) => {
+    try {
+        const { message, history, context } = req.body;
+
+        // Context prompt to give the AI a persona
+        const systemPrompt = `
+        You are "SymbioBot", an intelligent assistant for the "Symbio" genomic analysis platform.
+        
+        Your Context:
+        - The user is currently on the "${context || 'Dashboard'}" page.
+        - Symbio allows users to upload FASTA files, analyze them for GC content and ORFs (Open Reading Frames), and generate reports.
+        - You are helpful, scientific, and polite. 
+        - If asked about analysis, explain that GC content indicates thermal stability and ORFs suggest potential coding regions.
+        - Keep answers concise and relevant to bioinformatics and web navigation.
+
+        User History:
+        ${history ? history.map(h => `${h.role}: ${h.text}`).join('\n') : ''}
+        
+        User's New Question: ${message}
+        `;
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        // Using gemini-pro for chat as it's good for reasoning
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        const result = await model.generateContent(systemPrompt);
+        const response = result.response.text();
+
+        res.status(200).json({ reply: response });
+
+    } catch (error) {
+        console.error('Chatbot error:', error);
+        res.status(500).json({ message: 'I am having trouble thinking right now.', error: error.message });
+    }
+};

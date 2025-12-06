@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
@@ -8,6 +8,9 @@ import AuthPage from './components/AuthPage';
 import { parseFasta } from './utils';
 import { GlobalStyles, styles, theme } from './theme';
 import ReactMarkdown from 'react-markdown';
+import ChatBot from './components/ChatBot';
+import AnimatedBackground from './components/AnimatedBackground';
+import gsap from 'gsap';
 
 const SummaryView = () => {
   const [summary, setSummary] = useState('');
@@ -25,7 +28,7 @@ const SummaryView = () => {
       const user = storedUser ? JSON.parse(storedUser) : null;
       const userId = user?.id || user?._id || null;
 
-      // Fetch stats (reuse existing endpoint or calculate from uploads if passed, but let's fetch fresh)
+      // Fetch stats
       const url = userId ? `/api/fasta?userId=${userId}` : '/api/fasta';
       const response = await fetch(url, { headers: { 'x-user-id': userId || '' } });
       let uploads = [];
@@ -40,7 +43,8 @@ const SummaryView = () => {
       // Fetch AI Summary
       const summaryResponse = await fetch('/api/summary', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': userId || '' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId || '' })
       });
 
       if (summaryResponse.ok) {
@@ -108,19 +112,37 @@ function App() {
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [uploads, setUploads] = useState([]);
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'upload' | 'reports' | 'summary' | 'view_report'
+  const [activeView, setActiveView] = useState('dashboard');
   const [selectedSequence, setSelectedSequence] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [previousView, setPreviousView] = useState('dashboard'); // Track where user came from
+  const [previousView, setPreviousView] = useState('dashboard');
+
+  const appRef = useRef(null);
 
   useEffect(() => {
     checkAuth();
     checkForPublicReport();
+
+    // Animate app entry
+    if (appRef.current) {
+      gsap.from(appRef.current, {
+        opacity: 0,
+        y: 20,
+        duration: 0.8,
+        ease: 'power3.out'
+      });
+    }
   }, []);
+
+  // Fetch uploads whenever auth is checked/user changes or view changes to dashboard/history
+  useEffect(() => {
+    if (user && (activeView === 'dashboard' || activeView === 'reports' || activeView === 'summary')) {
+      fetchUploads();
+    }
+  }, [user, activeView]);
 
   const checkAuth = () => {
     try {
-      // Check localStorage for user
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
@@ -132,7 +154,6 @@ function App() {
     }
   };
 
-  // Check if URL is a public report link
   const checkForPublicReport = async () => {
     const path = window.location.pathname;
     const reportMatch = path.match(/^\/report\/([a-f0-9]+)$/i);
@@ -145,7 +166,7 @@ function App() {
           const data = await response.json();
           setSelectedSequence({ ...data, id: data._id });
           setActiveView('view_report');
-          setAuthChecked(true);
+          setAuthChecked(true); // Allow viewing without login
         }
       } catch (error) {
         console.error('Failed to load public report', error);
@@ -153,10 +174,6 @@ function App() {
       }
     }
   };
-
-  useEffect(() => {
-    fetchUploads();
-  }, []);
 
   const fetchUploads = async () => {
     try {
@@ -195,11 +212,11 @@ function App() {
     try {
       const text = await file.text();
       const storedUser = localStorage.getItem('user');
-      const user = storedUser ? JSON.parse(storedUser) : null;
-      const userId = user?.id || user?._id || null;
+      const currentUser = storedUser ? JSON.parse(storedUser) : user;
+      const userId = currentUser?.id || currentUser?._id || null;
 
-      // For guest users, parse locally and save to localStorage only
-      if (!user || user.role === 'guest' || user.email === 'guest') {
+      // For guest users
+      if (!currentUser || currentUser.role === 'guest' || currentUser.email === 'guest') {
         const parsedData = parseFasta(text, file.name);
         const guestUploads = JSON.parse(localStorage.getItem('guestUploads')) || [];
         const newUpload = {
@@ -217,7 +234,7 @@ function App() {
         return;
       }
 
-      // For registered users, save to server
+      // For registered users
       const response = await fetch('/api/fasta', {
         method: 'POST',
         headers: {
@@ -252,23 +269,21 @@ function App() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this sequence from the view?")) return;
-
     const storedUser = localStorage.getItem('user');
-    const user = storedUser ? JSON.parse(storedUser) : null;
+    const currentUser = storedUser ? JSON.parse(storedUser) : user;
 
-    // Guest users: UI-only deletion from localStorage
-    if (!user || user.role === 'guest' || user.email === 'guest') {
-      setUploads(prev => prev.filter(item => item.id !== id));
+    if (!window.confirm("Are you sure you want to delete this sequence?")) return;
+
+    if (!currentUser || currentUser.role === 'guest') {
       const guestUploads = JSON.parse(localStorage.getItem('guestUploads')) || [];
       const filtered = guestUploads.filter(item => item.id !== id);
       localStorage.setItem('guestUploads', JSON.stringify(filtered));
+      setUploads(prev => prev.filter(item => item.id !== id));
       return;
     }
 
-    // Registered users: Delete from database
     try {
-      const userId = user.id || user._id;
+      const userId = currentUser.id || currentUser._id;
       const response = await fetch(`/api/fasta/${id}?userId=${userId}`, {
         method: 'DELETE',
         headers: { 'x-user-id': userId }
@@ -277,23 +292,21 @@ function App() {
       if (response.ok) {
         setUploads(prev => prev.filter(item => item.id !== id));
       } else {
-        const data = await response.json();
-        alert(data.message || 'Failed to delete');
+        alert('Failed to delete');
       }
     } catch (error) {
       console.error('Failed to delete', error);
-      alert('Failed to delete sequence');
     }
   };
 
   const handleGenerateReport = (sequence) => {
-    setPreviousView(activeView); // Remember current view before navigating
+    setPreviousView(activeView);
     setSelectedSequence(sequence);
     setActiveView('view_report');
   };
 
   const handleBack = () => {
-    setActiveView(previousView); // Go back to previous view
+    setActiveView(previousView);
     setSelectedSequence(null);
   };
 
@@ -340,7 +353,7 @@ function App() {
     );
   }
 
-  // Allow public viewing of reports via shared links
+  // Public Report View
   if (!user && activeView === 'view_report' && selectedSequence) {
     return (
       <>
@@ -354,10 +367,12 @@ function App() {
     );
   }
 
+  // Auth Page
   if (!user) {
     return (
       <>
         <GlobalStyles />
+        <AnimatedBackground />
         <AuthPage onAuthSuccess={(userData) => setUser(userData)} />
       </>
     );
@@ -366,11 +381,13 @@ function App() {
   return (
     <>
       <GlobalStyles />
-      <div style={styles.appContainer}>
+      <AnimatedBackground />
+      <div style={styles.appContainer} ref={appRef}>
         <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} user={user} onLogout={handleLogout} />
         <main style={styles.mainContent}>
           {renderContent()}
         </main>
+        <ChatBot currentView={activeView} />
       </div>
     </>
   );

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { UploadCloud, FileCode, Activity, Clock, Eye } from 'lucide-react';
 import { styles, theme } from '../theme';
+import gsap from 'gsap';
 
-const MetricCard = ({ title, value, icon: Icon, color }) => (
-    <div style={styles.metricCard}>
+const MetricCard = ({ title, value, icon: Icon, color, index }) => (
+    <div className="metric-card" style={styles.metricCard}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <span style={{ color: theme.colors.textMuted, fontSize: '0.9rem' }}>{title}</span>
             <Icon size={18} color={color} style={{ opacity: 0.8 }} />
@@ -13,6 +14,9 @@ const MetricCard = ({ title, value, icon: Icon, color }) => (
 );
 
 const Dashboard = ({ uploads, onGenerateReport }) => {
+    const containerRef = useRef(null);
+    const tableRef = useRef(null);
+
     // Calculate metrics
     const totalUploads = uploads.length;
     const orfCount = uploads.filter(u => u.orf_detected).length;
@@ -23,8 +27,30 @@ const Dashboard = ({ uploads, onGenerateReport }) => {
     // Mock data for "Recent Activity" if uploads are low, to match screenshot vibe
     const recentActivity = totalUploads > 0 ? totalUploads : 0;
 
+    useEffect(() => {
+        const ctx = gsap.context(() => {
+            gsap.from(".metric-card", {
+                y: 30,
+                opacity: 0,
+                duration: 0.6,
+                stagger: 0.1,
+                ease: "power2.out"
+            });
+
+            gsap.from(tableRef.current, {
+                y: 30,
+                opacity: 0,
+                duration: 0.6,
+                delay: 0.3,
+                ease: "power2.out"
+            });
+        }, containerRef);
+
+        return () => ctx.revert();
+    }, []);
+
     return (
-        <div className="animate-fade-in">
+        <div ref={containerRef} className="animate-fade-in">
             <h2 style={{ marginBottom: '2rem' }}>Dashboard</h2>
 
             {/* Metrics Row */}
@@ -34,29 +60,33 @@ const Dashboard = ({ uploads, onGenerateReport }) => {
                     value={totalUploads.toLocaleString()}
                     icon={UploadCloud}
                     color={theme.colors.primaryBlue}
+                    index={0}
                 />
                 <MetricCard
                     title="Files With ORF"
                     value={orfCount.toLocaleString()}
                     icon={FileCode}
                     color={theme.colors.primaryPurple}
+                    index={1}
                 />
                 <MetricCard
                     title="Avg GC%"
                     value={`${avgGc}%`}
                     icon={Activity}
                     color={theme.colors.accentCyan}
+                    index={2}
                 />
                 <MetricCard
                     title="Recent Activity"
                     value={recentActivity}
                     icon={Clock}
                     color={theme.colors.accentGreen}
+                    index={3}
                 />
             </div>
 
             {/* Recent Uploads Table */}
-            <div style={{ ...styles.glassPanel, padding: '2rem' }}>
+            <div ref={tableRef} style={{ ...styles.glassPanel, padding: '2rem' }}>
                 <h3 style={{ marginBottom: '1.5rem' }}>Recent Uploads</h3>
                 {totalUploads === 0 ? (
                     <div style={{ textAlign: 'center', padding: '2rem', color: theme.colors.textMuted }}>
