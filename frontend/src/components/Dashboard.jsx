@@ -7,6 +7,7 @@ const MetricCard = ({ title, value, icon: Icon, color }) => {
 
     return (
         <div
+            className="metric-card"
             style={{
                 ...styles.metricCard,
                 transform: isHovered ? 'translateY(-5px)' : 'translateY(0)',

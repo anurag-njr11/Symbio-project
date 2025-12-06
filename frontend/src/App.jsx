@@ -9,6 +9,7 @@ import GSAPDecorations from './components/ux/GSAPDecorations';
 import { parseFasta } from './utils';
 import { GlobalStyles, styles, theme } from './theme';
 import ReactMarkdown from 'react-markdown';
+import ChatBot from './components/ChatBot';
 
 const SummaryView = () => {
   const [summary, setSummary] = useState('');
@@ -408,6 +409,7 @@ function App() {
         <main style={{ ...styles.mainContent, position: 'relative', zIndex: 1 }}>
           {renderContent()}
         </main>
+        <ChatBot currentView={activeView} />
       </div>
     </>
   );
