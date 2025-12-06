@@ -2,26 +2,50 @@ import React from 'react';
 
 export const theme = {
   colors: {
-    bgDark: '#f8fafc', // Light background (Slate 50)
-    bgPanel: '#ffffff', // White panels
-    primaryBlue: '#2563eb',
-    primaryPurple: '#7c3aed',
+    // Light theme - Biology inspired
+    bgPrimary: '#ffffff',
+    bgSecondary: '#f9fafb',
+    bgGradientStart: '#ffffff',
+    bgGradientMid: '#e0f2ff',
+    bgGradientEnd: '#ebe7ff',
+
+    // Soft biology colors
+    primaryBlue: '#3b82f6',
+    primaryPurple: '#8b5cf6',
     accentCyan: '#06b6d4',
+    accentPurple: '#a855f7',
     accentGreen: '#10b981',
-    textMain: '#0f172a', // Dark text (Slate 900)
-    textMuted: '#64748b', // Muted text (Slate 500)
-    borderColor: '#e2e8f0', // Light border (Slate 200)
-    glassBg: 'rgba(255, 255, 255, 0.9)', // More opaque white for light mode
-    glassBorder: 'rgba(0, 0, 0, 0.05)',
+    accentPink: '#ec4899',
+
+    // Pastel accents
+    pastelBlue: '#e0f2ff',
+    pastelPurple: '#ebe7ff',
+    pastelCyan: '#c7f7ff',
+    pastelGreen: '#dff7e8',
+
+    // Text colors
+    textPrimary: '#1f2937',
+    textSecondary: '#4b5563',
+    textMuted: '#9ca3af',
+
+    // Glass & borders
+    glassBg: 'rgba(255, 255, 255, 0.6)',
+    glassBgLight: 'rgba(255, 255, 255, 0.7)',
+    glassBorder: 'rgba(148, 163, 184, 0.2)',
+    borderColor: '#e5e7eb',
   },
   gradients: {
-    main: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-    bg: 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)', // Subtle light gradient
-    text: 'linear-gradient(to right, #2563eb, #7c3aed)', // Darker gradient for text
+    main: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+    bg: 'linear-gradient(135deg, #ffffff 0%, #e0f2ff 50%, #ebe7ff 100%)',
+    text: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+    card: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.6))',
+    hover: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
   },
   shadows: {
-    glass: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // Softer shadow
-    hover: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    glass: '0 8px 32px rgba(31, 38, 135, 0.15)',
+    hover: '0 12px 40px rgba(31, 38, 135, 0.25)',
+    glow: '0 0 20px rgba(59, 130, 246, 0.3)',
+    card: '0 4px 16px rgba(0, 0, 0, 0.08)',
   },
   fonts: {
     main: "'Inter', system-ui, -apple-system, sans-serif",
@@ -31,34 +55,35 @@ export const theme = {
 export const styles = {
   glassPanel: {
     background: theme.colors.glassBg,
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     border: `1px solid ${theme.colors.glassBorder}`,
     boxShadow: theme.shadows.glass,
-    borderRadius: '16px',
+    borderRadius: '24px',
   },
   btnPrimary: {
     background: theme.gradients.main,
     color: 'white',
     border: 'none',
     padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
+    borderRadius: '12px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
   },
   btnSecondary: {
-    background: 'transparent',
-    border: `1px solid ${theme.colors.borderColor}`,
-    color: theme.colors.textMain,
+    background: 'rgba(255, 255, 255, 0.8)',
+    border: `1.5px solid ${theme.colors.glassBorder}`,
+    color: theme.colors.textSecondary,
     padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
+    borderRadius: '12px',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
@@ -94,18 +119,21 @@ export const styles = {
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    color: theme.colors.textMain,
+    color: theme.colors.textPrimary,
   },
   th: {
     textAlign: 'left',
     padding: '1rem',
-    borderBottom: `1px solid ${theme.colors.borderColor}`,
-    color: theme.colors.textMuted,
+    borderBottom: `2px solid ${theme.colors.borderColor}`,
+    color: theme.colors.textSecondary,
     fontWeight: 600,
+    fontSize: '0.875rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   },
   td: {
     padding: '1rem',
-    borderBottom: `1px solid ${theme.colors.glassBorder}`,
+    borderBottom: `1px solid ${theme.colors.borderColor}`,
   },
   // New Layout Styles
   appContainer: {
@@ -114,8 +142,9 @@ export const styles = {
   },
   sidebar: {
     width: '250px',
-    background: theme.colors.bgPanel,
-    borderRight: `1px solid ${theme.colors.borderColor}`,
+    background: theme.colors.glassBg,
+    backdropFilter: 'blur(16px)',
+    borderRight: `1px solid ${theme.colors.glassBorder}`,
     padding: '2rem 1rem',
     display: 'flex',
     flexDirection: 'column',
@@ -135,29 +164,31 @@ export const styles = {
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    color: isActive ? 'white' : theme.colors.textMuted,
+    borderRadius: '12px',
+    color: isActive ? 'white' : theme.colors.textSecondary,
     background: isActive ? theme.gradients.main : 'transparent',
     cursor: 'pointer',
     marginBottom: '0.5rem',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
     fontWeight: 500,
     border: 'none',
     width: '100%',
     textAlign: 'left',
+    boxShadow: isActive ? theme.shadows.glow : 'none',
   }),
   metricCard: {
-    background: theme.colors.glassBg,
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+    background: theme.colors.glassBgLight,
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     border: `1px solid ${theme.colors.glassBorder}`,
-    boxShadow: theme.shadows.glass,
-    borderRadius: '16px',
+    boxShadow: theme.shadows.card,
+    borderRadius: '20px',
     padding: '1.5rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
     height: '100%',
+    transition: 'all 0.3s ease',
   }
 };
 
@@ -170,38 +201,86 @@ export const GlobalStyles = () => (
     }
     body {
       font-family: ${theme.fonts.main};
-      background-color: ${theme.colors.bgDark};
-      background-image: ${theme.gradients.bg};
+      background: ${theme.gradients.bg};
       background-attachment: fixed;
-      color: ${theme.colors.textMain};
+      color: ${theme.colors.textPrimary};
       min-height: 100vh;
-      line-height: 1.5;
+      line-height: 1.6;
+      letter-spacing: 0.3px;
     }
+    
+    /* Biology-themed animations */
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .animate-fade-in {
-      animation: fadeIn 0.5s ease-out forwards;
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); opacity: 0.3; }
+      50% { transform: translateY(-20px); opacity: 0.6; }
     }
+    
+    @keyframes floatSlow {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(10px, -10px); }
+      50% { transform: translate(-5px, -20px); }
+      75% { transform: translate(-10px, -5px); }
+    }
+    
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.05); opacity: 0.7; }
     }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes dnaRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+    
     .animate-pulse {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-    /* Hover effects for buttons handled via JS events or simple classes if needed, 
-       but for pure JS we can use onMouseEnter/Leave or keep simple CSS classes for pseudo-states 
-       in this style block */
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    /* Hover effects */
     .btn-primary:hover {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
-      box-shadow: ${theme.shadows.hover};
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
     }
+    
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: ${theme.colors.textMuted};
+      background: rgba(255, 255, 255, 0.95);
+      border-color: ${theme.colors.primaryBlue};
+      transform: translateY(-1px);
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+    }
+    
+    /* Smooth transitions */
+    * {
+      transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+      transition-duration: 200ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     }
   `}</style>
 );

@@ -1,4 +1,5 @@
 const Sequence = require('../database/Sequence');
+const User = require('../database/User');
 
 // Generate textual biological interpretation (Fix #9)
 function generateInterpretation(data) {
@@ -25,6 +26,7 @@ exports.getAllFiles = async (req, res) => {
         // Filter by userId (null for guest users)
         const query = userId && userId !== 'null' && userId !== 'guest' ? { userId } : { userId: null };
         const sequences = await Sequence.find(query).sort({ timestamp: -1 });
+
         res.status(200).json(sequences);
     } catch (error) {
         res.status(500).json({ message: error.message });

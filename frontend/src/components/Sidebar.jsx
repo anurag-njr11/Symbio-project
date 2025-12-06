@@ -37,26 +37,48 @@ const Sidebar = ({ activeView, onNavigate, user, onLogout }) => {
 
     return (
         <aside style={styles.sidebar}>
+            {/* Logo Section with gradient */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem', paddingLeft: '0.5rem' }}>
                 <div style={{
                     background: theme.gradients.main,
-                    padding: '0.4rem',
-                    borderRadius: '8px',
+                    padding: '0.6rem',
+                    borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    boxShadow: `0 10px 30px ${theme.colors.accentCyan}40`,
                 }}>
-                    <Dna size={20} color="white" />
+                    <Dna size={24} color="white" strokeWidth={2.5} />
                 </div>
-                <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700 }}>Symbio-NLM</h1>
+                <h1 style={{
+                    fontSize: '1.3rem',
+                    margin: 0,
+                    fontWeight: 700,
+                    background: theme.gradients.text,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                }}>Symbio-NLM</h1>
             </div>
 
+            {/* Navigation with enhanced hover effects */}
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {navItems.map((item) => (
                     <button
                         key={item.id}
                         onClick={() => onNavigate(item.id)}
                         style={styles.navItem(activeView === item.id)}
+                        onMouseEnter={(e) => {
+                            if (activeView !== item.id) {
+                                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                                e.target.style.color = theme.colors.textSecondary;
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (activeView !== item.id) {
+                                e.target.style.background = 'transparent';
+                                e.target.style.color = theme.colors.textMuted;
+                            }
+                        }}
                     >
                         <item.icon size={20} />
                         {item.label}
@@ -64,13 +86,31 @@ const Sidebar = ({ activeView, onNavigate, user, onLogout }) => {
                 ))}
             </nav>
 
-            <div style={{ marginTop: 'auto', padding: '1rem', borderTop: `1px solid ${theme.colors.borderColor}` }}>
+            {/* User Profile Section with glassmorphism */}
+            <div style={{
+                marginTop: 'auto',
+                padding: '1rem',
+                borderTop: `1px solid ${theme.colors.glassBorder}`,
+                background: 'rgba(255, 255, 255, 0.02)',
+                borderRadius: '12px',
+            }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: theme.colors.primaryBlue, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                    <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: theme.gradients.main,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        fontSize: '0.8rem',
+                        boxShadow: `0 0 20px ${theme.colors.accentCyan}40`,
+                    }}>
                         {getUserInitials()}
                     </div>
                     <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{getUserDisplayName()}</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: theme.colors.textSecondary }}>{getUserDisplayName()}</div>
                         <div style={{ fontSize: '0.75rem', color: theme.colors.textMuted }}>{getUserRole()}</div>
                     </div>
                 </div>
@@ -79,14 +119,25 @@ const Sidebar = ({ activeView, onNavigate, user, onLogout }) => {
                         onClick={onLogout}
                         style={{
                             width: '100%',
-                            padding: '0.5rem',
+                            padding: '0.6rem',
                             background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '6px',
+                            border: `1px solid ${theme.colors.glassBorder}`,
+                            borderRadius: '8px',
                             color: theme.colors.textMuted,
                             fontSize: '0.85rem',
                             cursor: 'pointer',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.3s',
+                            fontWeight: 500,
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.background = 'rgba(255, 255, 255, 0.08)';
+                            e.target.style.borderColor = theme.colors.accentCyan;
+                            e.target.style.color = theme.colors.textSecondary;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.background = 'rgba(255,255,255,0.05)';
+                            e.target.style.borderColor = theme.colors.glassBorder;
+                            e.target.style.color = theme.colors.textMuted;
                         }}
                     >
                         Logout

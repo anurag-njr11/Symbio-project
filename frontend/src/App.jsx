@@ -82,11 +82,17 @@ function App() {
       });
       if (response.ok) {
         const data = await response.json();
-        const formattedData = data.map(item => ({
+        let formattedData = data.map(item => ({
           ...item,
           id: item._id,
           timestamp: item.createdAt || new Date().toISOString()
         }));
+
+        // Filter soft-deleted files if user is logged in
+        if (user && user.softDeletedFiles && Array.isArray(user.softDeletedFiles)) {
+          formattedData = formattedData.filter(f => !user.softDeletedFiles.includes(f._id));
+        }
+
         setUploads(formattedData);
       }
     } catch (error) {
@@ -161,25 +167,45 @@ function App() {
     const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
 
-    // Guest users: UI-only deletion from localStorage
+    // Guest users: UI-only deletion, do NOT persist
     if (!user || user.role === 'guest' || user.email === 'guest') {
       setUploads(prev => prev.filter(item => item.id !== id));
-      const guestUploads = JSON.parse(localStorage.getItem('guestUploads')) || [];
-      const filtered = guestUploads.filter(item => item.id !== id);
-      localStorage.setItem('guestUploads', JSON.stringify(filtered));
       return;
     }
 
-    // Registered users: Delete from database
+    // Registered users: Soft delete via API (persist for user)
     try {
       const userId = user.id || user._id;
-      const response = await fetch(`/api/fasta/${id}?userId=${userId}`, {
-        method: 'DELETE',
-        headers: { 'x-user-id': userId }
+      const response = await fetch('/api/user/soft-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId
+        },
+        body: JSON.stringify({ userId, fileId: id })
       });
 
       if (response.ok) {
+        // Update UI only after successful soft-delete
         setUploads(prev => prev.filter(item => item.id !== id));
+
+        // Update user in localStorage to include this file in softDeletedFiles if needed, 
+        // but the backend handles the persistence. 
+        // We might want to update the local user object if we were using it for filtering, 
+        // but we filter based on API response on fetch.
+        // However, for immediate consistency if we re-fetch, it should be fine.
+
+        // Optionally update the user object in localStorage to reflect the change immediately if we were using it client-side
+        // But the requirement says "On login or page load... Filter them". 
+        // So just updating UI state is enough for now.
+
+        const data = await response.json();
+        if (data.softDeletedFiles) {
+          const updatedUser = { ...user, softDeletedFiles: data.softDeletedFiles };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+
       } else {
         const data = await response.json();
         alert(data.message || 'Failed to delete');
@@ -213,7 +239,14 @@ function App() {
       case 'upload':
         return (
           <>
-            <h2 style={{ marginBottom: '2rem' }}>Upload FASTA File</h2>
+            <h2 style={{
+              marginBottom: '2rem',
+              fontSize: '2rem',
+              fontWeight: 700,
+              background: theme.gradients.text,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>Upload FASTA File</h2>
             <UploadSection onUpload={handleUpload} />
             {isProcessing && (
               <div style={{ textAlign: 'center', padding: '2rem', color: theme.colors.accentCyan }}>
@@ -226,27 +259,70 @@ function App() {
         return <HistoryView uploads={uploads} onViewReport={handleGenerateReport} onDelete={handleDelete} />;
       case 'summary':
         return (
-          <div style={{ ...styles.glassPanel, padding: '3rem' }}>
-            <h2 style={{ marginBottom: '2rem' }}>Project Summary</h2>
+          <div className="animate-fade-in" style={{ ...styles.glassPanel, padding: '3rem' }}>
+            <h2 style={{
+              marginBottom: '2rem',
+              fontSize: '2rem',
+              fontWeight: 700,
+              background: theme.gradients.text,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>Project Summary</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Sequences</div>
-                <div style={{ fontSize: '2rem', fontWeight: 700 }}>{uploads.length}</div>
+              <div style={{
+                background: theme.colors.glassBgLight,
+                backdropFilter: 'blur(10px)',
+                padding: '1.5rem',
+                borderRadius: '20px',
+                border: `1px solid ${theme.colors.glassBorder}`,
+              }}>
+                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem', fontWeight: 500 }}>Total Sequences</div>
+                <div style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 700,
+                  background: theme.gradients.text,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>{uploads.length}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Avg GC Content</div>
-                <div style={{ fontSize: '2rem', fontWeight: 700 }}>
+              <div style={{
+                background: theme.colors.glassBgLight,
+                backdropFilter: 'blur(10px)',
+                padding: '1.5rem',
+                borderRadius: '20px',
+                border: `1px solid ${theme.colors.glassBorder}`,
+              }}>
+                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem', fontWeight: 500 }}>Avg GC Content</div>
+                <div style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 700,
+                  background: theme.gradients.text,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>
                   {uploads.length > 0 ? (uploads.reduce((acc, curr) => acc + curr.gc_percent, 0) / uploads.length).toFixed(1) : 0}%
                 </div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Base Pairs</div>
-                <div style={{ fontSize: '2rem', fontWeight: 700 }}>
+              <div style={{
+                background: theme.colors.glassBgLight,
+                backdropFilter: 'blur(10px)',
+                padding: '1.5rem',
+                borderRadius: '20px',
+                border: `1px solid ${theme.colors.glassBorder}`,
+              }}>
+                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem', fontWeight: 500 }}>Total Base Pairs</div>
+                <div style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 700,
+                  background: theme.gradients.text,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>
                   {uploads.length > 0 ? (uploads.reduce((acc, curr) => acc + curr.length, 0)).toLocaleString() : 0}
                 </div>
               </div>
             </div>
-            <p style={{ color: theme.colors.textMuted, marginTop: '1rem' }}>
+            <p style={{ color: theme.colors.textMuted, marginTop: '1rem', lineHeight: '1.7' }}>
               This platform allows for the analysis of genomic sequences. Upload FASTA files to analyze their properties including GC content, ORF detection, and nucleotide composition.
             </p>
           </div>
@@ -295,9 +371,53 @@ function App() {
   return (
     <>
       <GlobalStyles />
-      <div style={styles.appContainer}>
+      <div style={{ ...styles.appContainer, position: 'relative', overflow: 'hidden' }}>
+        {/* Light biology-themed floating particles */}
+        <div style={{
+          position: 'fixed',
+          top: '15%',
+          left: '10%',
+          width: '300px',
+          height: '300px',
+          background: `radial-gradient(circle, ${theme.colors.pastelBlue}, transparent)`,
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          animation: 'floatSlow 15s ease-in-out infinite',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.4,
+        }} />
+        <div style={{
+          position: 'fixed',
+          bottom: '20%',
+          right: '15%',
+          width: '350px',
+          height: '350px',
+          background: `radial-gradient(circle, ${theme.colors.pastelPurple}, transparent)`,
+          borderRadius: '50%',
+          filter: 'blur(70px)',
+          animation: 'floatSlow 18s ease-in-out infinite reverse',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.4,
+        }} />
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          right: '5%',
+          width: '200px',
+          height: '200px',
+          background: `radial-gradient(circle, ${theme.colors.pastelCyan}, transparent)`,
+          borderRadius: '50%',
+          filter: 'blur(50px)',
+          animation: 'float 12s ease-in-out infinite',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.3,
+        }} />
+
         <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} user={user} onLogout={handleLogout} />
-        <main style={styles.mainContent}>
+        <main style={{ ...styles.mainContent, position: 'relative', zIndex: 1 }}>
           {renderContent()}
         </main>
       </div>

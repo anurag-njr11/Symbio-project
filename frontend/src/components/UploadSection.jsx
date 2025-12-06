@@ -50,7 +50,7 @@ const UploadSection = ({ onUpload }) => {
         // Validate FASTA format before sending to backend (Fix #10)
         try {
             const text = await file.text();
-            
+
             if (!text.trim().startsWith(">")) {
                 setError('Invalid FASTA: missing header (file must start with >)');
                 return;
@@ -77,10 +77,21 @@ const UploadSection = ({ onUpload }) => {
     };
 
     return (
-        <div className="animate-fade-in" style={{ ...styles.glassPanel, padding: '2rem', marginBottom: '2rem' }}>
-            <h2 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <UploadCloud style={{ stroke: 'url(#gradient)' }} /> {/* Simple workaround or just use color */}
-                <span style={styles.textGradient}>Upload Sequence</span>
+        <div className="animate-fade-in" style={{ ...styles.glassPanel, padding: '2.5rem', marginBottom: '2rem' }}>
+            <h2 style={{
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                fontSize: '1.8rem',
+                fontWeight: 700,
+            }}>
+                <UploadCloud size={28} color={theme.colors.accentCyan} />
+                <span style={{
+                    background: theme.gradients.text,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                }}>Upload Sequence</span>
             </h2>
 
             {!file ? (
@@ -89,13 +100,24 @@ const UploadSection = ({ onUpload }) => {
                     onDragOver={handleDragOver}
                     onClick={() => fileInputRef.current.click()}
                     style={{
-                        border: `2px dashed ${theme.colors.borderColor}`,
-                        borderRadius: '12px',
-                        padding: '3rem',
+                        border: `2px dashed ${theme.colors.glassBorder}`,
+                        borderRadius: '20px',
+                        padding: '4rem 3rem',
                         textAlign: 'center',
                         cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        backgroundColor: 'rgba(255,255,255,0.02)'
+                        transition: 'all 0.3s ease',
+                        background: theme.colors.glassBgLight,
+                        backdropFilter: 'blur(10px)',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = theme.colors.accentCyan;
+                        e.currentTarget.style.background = 'rgba(6, 182, 212, 0.05)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = theme.colors.glassBorder;
+                        e.currentTarget.style.background = theme.colors.glassBgLight;
+                        e.currentTarget.style.transform = 'translateY(0)';
                     }}
                 >
                     <input
@@ -105,32 +127,52 @@ const UploadSection = ({ onUpload }) => {
                         accept=".fasta,.fa"
                         style={{ display: 'none' }}
                     />
-                    <UploadCloud size={48} style={{ color: theme.colors.primaryBlue, marginBottom: '1rem', opacity: 0.8 }} />
-                    <h3 style={{ marginBottom: '0.5rem' }}>Click or Drag & Drop to Upload</h3>
-                    <p style={{ color: theme.colors.textMuted }}>Supported formats: .fasta, .fa</p>
-                    {error && <p style={{ color: '#ef4444', marginTop: '1rem' }}>{error}</p>}
+                    <div style={{
+                        background: `${theme.colors.accentCyan}20`,
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 1.5rem',
+                    }}>
+                        <UploadCloud size={40} color={theme.colors.accentCyan} />
+                    </div>
+                    <h3 style={{
+                        marginBottom: '0.75rem',
+                        fontSize: '1.3rem',
+                        fontWeight: 600,
+                        color: theme.colors.textSecondary,
+                    }}>Click or Drag & Drop to Upload</h3>
+                    <p style={{ color: theme.colors.textMuted, fontSize: '1rem' }}>Supported formats: .fasta, .fa</p>
+                    {error && <p style={{ color: '#ef4444', marginTop: '1.5rem', fontWeight: 500 }}>{error}</p>}
                 </div>
             ) : (
                 <div style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
+                    background: theme.colors.glassBgLight,
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: '20px',
+                    padding: '2rem',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    border: `1px solid ${theme.colors.glassBorder}`,
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                         <div style={{
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            color: theme.colors.accentGreen
+                            background: `${theme.colors.accentGreen}20`,
+                            padding: '1rem',
+                            borderRadius: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                         }}>
-                            <FileText size={24} />
+                            <FileText size={32} color={theme.colors.accentGreen} />
                         </div>
                         <div>
-                            <h4 style={{ margin: 0 }}>{file.name}</h4>
-                            <p style={{ margin: 0, fontSize: '0.875rem', color: theme.colors.textMuted }}>
+                            <h4 style={{ margin: 0, marginBottom: '0.25rem', fontSize: '1.1rem', fontWeight: 600, color: theme.colors.textSecondary }}>{file.name}</h4>
+                            <p style={{ margin: 0, fontSize: '0.9rem', color: theme.colors.textMuted }}>
                                 {(file.size / 1024).toFixed(2)} KB
                             </p>
                         </div>
@@ -139,12 +181,17 @@ const UploadSection = ({ onUpload }) => {
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <button
                             onClick={clearFile}
-                            style={{ ...styles.btnSecondary, padding: '0.5rem', borderColor: 'transparent', color: theme.colors.textMuted }}
+                            style={{
+                                ...styles.btnSecondary,
+                                padding: '0.6rem',
+                                borderColor: 'transparent',
+                            }}
                         >
                             <X size={20} />
                         </button>
                         <button
                             onClick={handleSubmit}
+                            className="btn-primary"
                             style={styles.btnPrimary}
                         >
                             <CheckCircle size={18} />
@@ -153,7 +200,7 @@ const UploadSection = ({ onUpload }) => {
                     </div>
                 </div>
             )}
-            {error && <p style={{ color: '#ef4444', marginTop: '1rem' }}>{error}</p>}
+            {error && file && <p style={{ color: '#ef4444', marginTop: '1rem', fontWeight: 500 }}>{error}</p>}
         </div>
     );
 };

@@ -3,7 +3,7 @@ const express = require('express');
 const connectDB = require('./database/database');
 const { getById, postFasta, deleteById, downloadFile, downloadReport, getAllFiles } = require('./controllers/controller');
 const { downloadReportPDF } = require('./controllers/pdfController');
-const { signup, signin, signout, getCurrentUser } = require('./controllers/authController');
+const { signup, signin, signout, getCurrentUser, softDeleteFile } = require('./controllers/authController');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('./config/passport');
@@ -34,6 +34,7 @@ app.get('/auth/me', getCurrentUser);
 // API auth routes (aliases)
 app.post('/api/auth/signup', signup);
 app.post('/api/auth/login', signin);
+app.post('/api/user/soft-delete', softDeleteFile);
 
 // OAuth routes - Google
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

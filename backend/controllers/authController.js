@@ -46,7 +46,8 @@ exports.signup = async (req, res) => {
             user: {
                 id: newUser._id,
                 email: newUser.email,
-                name: newUser.name
+                name: newUser.name,
+                softDeletedFiles: newUser.softDeletedFiles || []
             }
         });
     } catch (error) {
@@ -96,7 +97,8 @@ exports.signin = async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                name: user.name
+                name: user.name,
+                softDeletedFiles: user.softDeletedFiles || []
             }
         });
     } catch (error) {
@@ -129,5 +131,34 @@ exports.getCurrentUser = async (req, res) => {
         res.status(200).json({ user });
     } catch (error) {
         res.status(401).json({ message: 'Invalid token' });
+    }
+};
+
+// Soft delete file for user
+exports.softDeleteFile = async (req, res) => {
+    try {
+        const { userId, fileId } = req.body;
+
+        if (!userId || !fileId) {
+            return res.status(400).json({ message: 'User ID and File ID are required' });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { softDeletedFiles: fileId } },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({
+            message: 'File soft-deleted successfully',
+            softDeletedFiles: user.softDeletedFiles
+        });
+    } catch (error) {
+        console.error('Soft delete error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
