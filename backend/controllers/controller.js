@@ -241,3 +241,50 @@ exports.deleteById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// OpenAI Summary Generation
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+exports.generateSummary = async (req, res) => {
+    try {
+        const userId = req.query.userId || req.headers['x-user-id'] || null;
+
+        // Fetch recent uploads for context (limit to last 5 to avoid token limits)
+        const query = userId && userId !== 'null' && userId !== 'guest' ? { userId } : { userId: null };
+        const sequences = await Sequence.find(query).sort({ timestamp: -1 }).limit(5);
+
+        if (sequences.length === 0) {
+            return res.status(200).json({ summary: "No sequences found to summarize." });
+        }
+
+        const sequenceSummaries = sequences.map(s =>
+            `- ${s.filename}: ${s.length}bp, GC=${s.gc_percent}%, ORF=${s.orf_detected ? 'Yes' : 'No'}. ${s.interpretation}`
+        ).join('\n');
+
+        const prompt = `
+        Analyze the following biological sequence data and provide a concise, scientific summary of the recent activity and findings. 
+        Highlight any patterns, interesting observations about GC content or ORFs, and the overall nature of the analyzed sequences.
+        Keep it professional and insightful for a researcher.
+
+        Data:
+        ${sequenceSummaries}
+        `;
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        const result = await model.generateContent(prompt);
+        const summary = result.response.text();
+
+        res.status(200).json({ summary });
+
+    } catch (error) {
+        console.error('Error generating summary:', error);
+        if (!process.env.GEMINI_API_KEY) {
+            console.error('DEBUG: GEMINI_API_KEY is missing in process.env');
+        } else {
+            console.error('DEBUG: GEMINI_API_KEY is present');
+        }
+        res.status(500).json({ message: 'Failed to generate summary', error: error.message });
+    }
+};

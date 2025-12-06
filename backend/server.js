@@ -75,6 +75,7 @@ app.get('/api/files/:id/download', downloadFile);
 app.get('/api/files/:id/report', downloadReportPDF);
 app.post('/api/fasta', postFasta);
 app.delete('/api/fasta/:id', deleteById);
+app.post('/api/summary', require('./controllers/controller').generateSummary);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

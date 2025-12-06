@@ -7,6 +7,102 @@ import HistoryView from './components/HistoryView';
 import AuthPage from './components/AuthPage';
 import { parseFasta } from './utils';
 import { GlobalStyles, styles, theme } from './theme';
+import ReactMarkdown from 'react-markdown';
+
+const SummaryView = () => {
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({ count: 0, avgGc: 0, totalBp: 0 });
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
+
+  const fetchSummary = async () => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || null;
+
+      // Fetch stats (reuse existing endpoint or calculate from uploads if passed, but let's fetch fresh)
+      const url = userId ? `/api/fasta?userId=${userId}` : '/api/fasta';
+      const response = await fetch(url, { headers: { 'x-user-id': userId || '' } });
+      let uploads = [];
+      if (response.ok) {
+        uploads = await response.json();
+        const count = uploads.length;
+        const avgGc = count > 0 ? (uploads.reduce((acc, curr) => acc + curr.gc_percent, 0) / count).toFixed(1) : 0;
+        const totalBp = count > 0 ? uploads.reduce((acc, curr) => acc + curr.length, 0) : 0;
+        setStats({ count, avgGc, totalBp });
+      }
+
+      // Fetch AI Summary
+      const summaryResponse = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': userId || '' }
+      });
+
+      if (summaryResponse.ok) {
+        const data = await summaryResponse.json();
+        setSummary(data.summary);
+      } else {
+        setError('Failed to generate summary');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('An error occurred while fetching the summary');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ ...styles.glassPanel, padding: '3rem' }}>
+      <h2 style={{ marginBottom: '2rem' }}>Project Summary</h2>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Sequences</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.count}</div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Avg GC Content</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.avgGc}%</div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+          <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Base Pairs</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.totalBp.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '12px', border: `1px solid ${theme.colors.border}` }}>
+        <h3 style={{ marginBottom: '1rem', color: theme.colors.accentCyan }}>AI Analysis</h3>
+        {loading ? (
+          <div className="animate-pulse" style={{ color: theme.colors.textMuted }}>Generating insight from your data...</div>
+        ) : error ? (
+          <div style={{ color: theme.colors.accentRed }}>{error}</div>
+        ) : (
+          <div style={{ lineHeight: '1.6', color: theme.colors.textSecondary, whiteSpace: 'pre-line' }}>
+            <ReactMarkdown
+              components={{
+                h1: ({ node, ...props }) => <h1 style={{ color: theme.colors.accentCyan, marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
+                h2: ({ node, ...props }) => <h2 style={{ color: theme.colors.accentCyan, marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1.5rem' }} {...props} />,
+                h3: ({ node, ...props }) => <h3 style={{ color: theme.colors.textPrimary, marginTop: '0.8rem', marginBottom: '0.4rem', fontSize: '1.2rem' }} {...props} />,
+                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', lineHeight: '1.6' }} {...props} />,
+                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
+                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem' }} {...props} />,
+                strong: ({ node, ...props }) => <strong style={{ color: theme.colors.accentPurple }} {...props} />
+              }}
+            >
+              {summary}
+            </ReactMarkdown>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 function App() {
   const [user, setUser] = useState(null);
@@ -225,32 +321,7 @@ function App() {
       case 'reports':
         return <HistoryView uploads={uploads} onViewReport={handleGenerateReport} onDelete={handleDelete} />;
       case 'summary':
-        return (
-          <div style={{ ...styles.glassPanel, padding: '3rem' }}>
-            <h2 style={{ marginBottom: '2rem' }}>Project Summary</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Sequences</div>
-                <div style={{ fontSize: '2rem', fontWeight: 700 }}>{uploads.length}</div>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Avg GC Content</div>
-                <div style={{ fontSize: '2rem', fontWeight: 700 }}>
-                  {uploads.length > 0 ? (uploads.reduce((acc, curr) => acc + curr.gc_percent, 0) / uploads.length).toFixed(1) : 0}%
-                </div>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                <div style={{ color: theme.colors.textMuted, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Base Pairs</div>
-                <div style={{ fontSize: '2rem', fontWeight: 700 }}>
-                  {uploads.length > 0 ? (uploads.reduce((acc, curr) => acc + curr.length, 0)).toLocaleString() : 0}
-                </div>
-              </div>
-            </div>
-            <p style={{ color: theme.colors.textMuted, marginTop: '1rem' }}>
-              This platform allows for the analysis of genomic sequences. Upload FASTA files to analyze their properties including GC content, ORF detection, and nucleotide composition.
-            </p>
-          </div>
-        );
+        return <SummaryView />;
       case 'view_report':
         return <ReportView sequence={selectedSequence} onBack={handleBack} />;
       default:
