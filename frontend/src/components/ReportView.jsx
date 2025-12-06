@@ -1,20 +1,31 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, Download, Share2, FileText } from 'lucide-react';
 import MetadataCard from './MetadataCard';
 import { AlignLeft, Activity, Zap } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { styles, theme } from '../theme';
 
 const ReportView = ({ sequence, onBack }) => {
     if (!sequence) return null;
 
+    // Fix #1: Download button handler
     const handleDownload = () => {
-        const element = document.createElement("a");
-        const file = new Blob([JSON.stringify(sequence, null, 2)], { type: 'application/json' });
-        element.href = URL.createObjectURL(file);
-        element.download = `${sequence.filename}_report.json`;
-        document.body.appendChild(element); // Required for this to work in FireFox
-        element.click();
-        document.body.removeChild(element);
+        window.location.href = `/api/files/${sequence._id || sequence.id}/report`;
+    };
+
+    // Fix #2: Share button handler
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: `Genomic Report: ${sequence.filename}`,
+                text: `View the genomic analysis report for ${sequence.filename}`,
+                url: `${window.location.origin}/report/${sequence._id || sequence.id}`
+            }).catch(err => console.log('Error sharing:', err));
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            alert('Share feature is not supported on this browser');
+        }
     };
 
     return (
@@ -64,11 +75,15 @@ const ReportView = ({ sequence, onBack }) => {
                         <button
                             onClick={handleDownload}
                             style={styles.btnSecondary}
-                            title="Export JSON Report"
+                            title="Download Sequence"
                         >
                             <Download size={20} />
                         </button>
-                        <button style={styles.btnSecondary} title="Share Report">
+                        <button
+                            onClick={handleShare}
+                            style={styles.btnSecondary}
+                            title="Share Report"
+                        >
                             <Share2 size={20} />
                         </button>
                     </div>
@@ -115,11 +130,19 @@ const ReportView = ({ sequence, onBack }) => {
 
                             <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', marginTop: '2rem' }}>
                                 <h4 style={{ marginBottom: '1rem', color: theme.colors.accentCyan }}>AI Summary</h4>
-                                <p style={{ fontStyle: 'italic', color: theme.colors.textMuted }}>
-                                    "This sequence shows characteristics consistent with {sequence.gc_percent > 60 ? 'GC-rich organisms such as certain bacteria or thermophiles' : 'standard genomic DNA'}.
-                                    The nucleotide distribution is {Math.abs(sequence.nucleotide_counts.A - sequence.nucleotide_counts.T) < sequence.length * 0.1 ? 'balanced' : 'skewed'},
-                                    indicating potential biological significance in..."
-                                </p>
+                                <div style={{ fontStyle: 'italic', color: theme.colors.textMuted, lineHeight: '1.6' }}>
+                                    {sequence.interpretation ? (
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({ node, ...props }) => <p style={{ margin: 0 }} {...props} />
+                                            }}
+                                        >
+                                            {sequence.interpretation}
+                                        </ReactMarkdown>
+                                    ) : (
+                                        "Interpretation not available."
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -128,6 +151,36 @@ const ReportView = ({ sequence, onBack }) => {
                         <h3 style={{ marginBottom: '1.5rem', borderBottom: `1px solid ${theme.colors.borderColor}`, paddingBottom: '0.5rem' }}>
                             Composition
                         </h3>
+                        {/* Pie Chart (Fix #5) */}
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <PieChart>
+                                    <Pie
+                                        data={[
+                                            { name: 'A', value: sequence.nucleotide_counts.A },
+                                            { name: 'T', value: sequence.nucleotide_counts.T },
+                                            { name: 'G', value: sequence.nucleotide_counts.G },
+                                            { name: 'C', value: sequence.nucleotide_counts.C }
+                                        ]}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        label={({ name, value }) => `${name}: ${((value / sequence.length) * 100).toFixed(1)}%`}
+                                        outerRadius={80}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                    >
+                                        <Cell fill="#ef4444" />
+                                        <Cell fill="#eab308" />
+                                        <Cell fill="#22c55e" />
+                                        <Cell fill="#3b82f6" />
+                                    </Pie>
+                                    <Tooltip formatter={(value) => `${((value / sequence.length) * 100).toFixed(1)}%`} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Bar Chart (existing) */}
                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px' }}>
                             {Object.entries(sequence.nucleotide_counts).map(([base, count]) => (
                                 <div key={base} style={{ marginBottom: '1rem' }}>
