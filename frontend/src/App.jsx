@@ -335,7 +335,12 @@ function App() {
         guestUploads.unshift(newUpload);
         localStorage.setItem('guestUploads', JSON.stringify(guestUploads));
         setUploads(guestUploads);
-        setActiveView('dashboard');
+
+        // Redirect to report
+        setPreviousView('dashboard');
+        setSelectedSequence(newUpload);
+        setActiveView('view_report');
+
         setIsProcessing(false);
         return;
       }
@@ -365,7 +370,12 @@ function App() {
       };
 
       setUploads(prev => [newUpload, ...prev]);
-      setActiveView('dashboard');
+
+      // Redirect to report
+      setPreviousView('dashboard');
+      setSelectedSequence(newUpload);
+      setActiveView('view_report');
+
     } catch (error) {
       console.error("Failed to upload file", error);
       alert("Failed to upload file");
