@@ -213,7 +213,7 @@ The UI is designed with:
 * Express
 * MongoDB / Mongoose
 * Passport.js (OAuth)
-* AI Integration (Gemini/OpenAI)
+* AI Integration (Gemini 2.5 flash)
 * PDFKit / Puppeteer (report generation)
 
 ---
