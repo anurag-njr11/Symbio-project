@@ -293,11 +293,29 @@ const ChatBot = ({ currentView }) => {
             if (!response.ok) throw new Error('Failed to get response');
 
             const data = await response.json();
-            setMessages(prev => [...prev, { role: 'model', text: data.reply }]);
+
+            // Parse Emotion Tags
+            let replyText = data.reply;
+            const emotionMatch = replyText.match(/\[EMOTION:([a-z]+)\]/i);
+
+            if (emotionMatch) {
+                const emotion = emotionMatch[1].toLowerCase();
+                setMascotEmotion(emotion);
+                // Remove tag from displayed text
+                replyText = replyText.replace(/\[EMOTION:[a-z]+\]/gi, '').trim();
+
+                // Reset to idle after a delay (except for sleeping/cool which might stay longer)
+                if (emotion !== 'sleeping') {
+                    setTimeout(() => setMascotEmotion('idle'), 5000);
+                }
+            }
+
+            setMessages(prev => [...prev, { role: 'model', text: replyText }]);
         } catch (error) {
             console.error('Chat error:', error);
             setMessages(prev => [...prev, { role: 'model', text: 'I apologize, but I am having trouble connecting right now. Please try again later.' }]);
         } finally {
+            const userMessage = input.trim(); // Access captured variable
             if (!PREDEFINED_QA.find(qa => qa.question.toLowerCase() === userMessage.toLowerCase())) {
                 setIsLoading(false);
             }
