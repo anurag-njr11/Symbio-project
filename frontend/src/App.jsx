@@ -79,29 +79,12 @@ const SummaryView = () => {
     }
   };
 
-  useEffect(() => {
-    if (!loading) {
-      gsap.from(".summary-card", {
-        y: 40,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: "back.out(1.2)",
-        scrollTrigger: {
-          trigger: ".summary-card",
-          start: "top 85%",
-          toggleActions: "play none none reverse"
-        }
-      });
-    }
-  }, [loading]);
-
   return (
     <div style={{ ...styles.glassPanel, padding: '3rem', minHeight: '80vh', position: 'relative', overflow: 'hidden' }}>
       <style>{cardHoverStyle}</style>
 
       {/* Header */}
-      <div style={{ marginBottom: '3rem', position: 'relative', zIndex: 1 }}>
+      <div className="animate-fade-in" style={{ marginBottom: '3rem', position: 'relative', zIndex: 1 }}>
         <h2 style={{
           fontSize: '2.5rem',
           marginBottom: '0.5rem',
@@ -121,77 +104,85 @@ const SummaryView = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
 
         {/* Card 1 */}
-        <div className="summary-card" style={{
-          background: 'rgba(255, 255, 255, 0.8)',
+        <div className="summary-card animate-fade-in" style={{
+          background: 'rgba(255, 255, 255, 0.95)',
           padding: '2rem',
           borderRadius: '20px',
-          border: `1px solid ${theme.colors.primaryBlue}40`, // Stronger border
+          border: `1px solid ${theme.colors.primaryBlue}`,
           position: 'relative',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+          opacity: 0,
+          animationDelay: '0.1s'
         }}>
-          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
+          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.1 }}>
             <Database size={48} color={theme.colors.primaryBlue} />
           </div>
-          <div style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>TOTAL SEQUENCES</div>
-          <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.primaryBlue }}>
+          <div style={{ color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>TOTAL SEQUENCES</div>
+          <div style={{ fontSize: '3rem', fontWeight: 800, color: '#1e3a8a' }}>
             {stats.count}
           </div>
-          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#475569' }}>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#334155' }}>
             Uploaded files
           </div>
         </div>
 
         {/* Card 2 */}
-        <div className="summary-card" style={{
-          background: 'rgba(255, 255, 255, 0.8)',
+        <div className="summary-card animate-fade-in" style={{
+          background: 'rgba(255, 255, 255, 0.95)',
           padding: '2rem',
           borderRadius: '20px',
-          border: `1px solid ${theme.colors.primaryPurple}40`,
+          border: `1px solid ${theme.colors.primaryPurple}`,
           position: 'relative',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+          opacity: 0,
+          animationDelay: '0.2s'
         }}>
-          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
+          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.1 }}>
             <Activity size={48} color={theme.colors.primaryPurple} />
           </div>
-          <div style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>AVG GC CONTENT</div>
-          <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.primaryPurple }}>
+          <div style={{ color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>AVG GC CONTENT</div>
+          <div style={{ fontSize: '3rem', fontWeight: 800, color: '#581c87' }}>
             {stats.avgGc}%
           </div>
-          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#475569' }}>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#334155' }}>
             Nucleotide composition
           </div>
         </div>
 
         {/* Card 3 */}
-        <div className="summary-card" style={{
-          background: 'rgba(255, 255, 255, 0.8)',
+        <div className="summary-card animate-fade-in" style={{
+          background: 'rgba(255, 255, 255, 0.95)',
           padding: '2rem',
           borderRadius: '20px',
-          border: `1px solid ${theme.colors.accentGreen}40`,
+          border: `1px solid ${theme.colors.accentGreen}`,
           position: 'relative',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+          opacity: 0,
+          animationDelay: '0.3s'
         }}>
-          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
+          <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.1 }}>
             <Dna size={48} color={theme.colors.accentGreen} />
           </div>
-          <div style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>TOTAL BASE PAIRS</div>
-          <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.accentGreen }}>
+          <div style={{ color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>TOTAL BASE PAIRS</div>
+          <div style={{ fontSize: '3rem', fontWeight: 800, color: '#064e3b' }}>
             {stats.totalBp.toLocaleString()}
           </div>
-          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#475569' }}>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#334155' }}>
             Combined length
           </div>
         </div>
       </div>
 
       {/* AI Analysis Section */}
-      <div className="summary-card" style={{
-        background: '#ffffff', // Solid White
+      <div className="summary-card animate-fade-in" style={{
+        background: '#ffffff',
         borderRadius: '24px',
-        border: `1px solid ${theme.colors.primaryPurple}`, // Solid Border
+        border: `1px solid ${theme.colors.primaryPurple}`,
         padding: '3rem',
         boxShadow: '0 10px 30px -5px rgba(0,0,0,0.1)',
-        marginTop: '3rem'
+        marginTop: '3rem',
+        opacity: 0,
+        animationDelay: '0.4s'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
           <div style={{
@@ -218,13 +209,13 @@ const SummaryView = () => {
             {error}
           </div>
         ) : (
-          <div style={{ lineHeight: '1.8', color: '#0f172a', fontSize: '1.05rem' }}> {/* Almost Black text */}
+          <div style={{ lineHeight: '1.8', color: '#0f172a', fontSize: '1.05rem' }}>
             <ReactMarkdown
               components={{
                 h1: ({ node, ...props }) => <h1 style={{ color: '#1e3a8a', marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.8rem', fontWeight: 800 }} {...props} />,
                 h2: ({ node, ...props }) => <h2 style={{ color: '#1e40af', marginTop: '1.25rem', marginBottom: '0.75rem', fontSize: '1.5rem', fontWeight: 700 }} {...props} />,
                 h3: ({ node, ...props }) => <h3 style={{ color: '#1d4ed8', marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }} {...props} />,
-                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', color: '#334155' }} {...props} />, // Dark Slate Paragraphs
+                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', color: '#334155' }} {...props} />,
                 strong: ({ node, ...props }) => <strong style={{ color: '#0f172a', fontWeight: 700 }} {...props} />,
                 ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
                 li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem', color: '#334155' }} {...props} />,
@@ -234,9 +225,8 @@ const SummaryView = () => {
             </ReactMarkdown>
           </div>
         )}
-
-      </div >
-    </div >
+      </div>
+    </div>
   );
 };
 

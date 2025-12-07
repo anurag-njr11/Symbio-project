@@ -105,20 +105,23 @@ const PREDEFINED_QA = [
 
 const THOUGHTS = {
     idle: [
-        "Scanning...", "I like DNA!", "So quiet...", "Analysis Mode",
-        "Data is beautiful", "Beep boop?", "Checking systems...", "All green!",
-        "Waiting for input...", "Do you have a sequence?", "I can help!",
-        "Did you know?", "Science rulez!", "Ready to work!", "Hello world!",
-        "My CPU is cool", "No bugs here!", "Just floating...", "Calculations..."
+        "Meow?", "Purr...", "Chasing data mice...", "Grooming my code...",
+        "Any treats?", "I love loops!", "Cat-culating...", "Pawsitive vibes!",
+        "Where is the red dot?", "Nap time soon?", "Hunting for bugs...",
+        "Zoomies loading...", "Data is tasty!", "Soft kitty...", "Warm kitty...",
+        "Little ball of fur...", "Happy kitty...", "Sleepy kitty...",
+        // Energetic
+        "Zoomies!", "Pounce!", "I'm fast!", "Catch me!",
+        "Boing!", "Leap!", "Parkour!", "Cat nip kicks in!", "Yippee!"
     ],
     hover: [
-        "Hi friend!", "Click me!", "Need help?", "Let's chat!",
-        "I'm ticklish!", "Ask me anything!", "I know science!", "Bot ready!",
-        "At your service!", "Ooh, attention!", "Hello human!", "Query me!"
+        "Pet me!", "Purrrrr!", "Scratch behind ears?", "Attention please!",
+        "I'm fluffy!", "Play with me!", "Meow!", "Hiss... jk!",
+        "Don't stop!", "More pets!", "You're nice!", "Rub against leg!"
     ],
     working: [
-        "Reading this...", "Processing...", "Decoding...", "Crunching numbers...",
-        "Analyzing patterns...", "Comparing bases...", "Running algo...", "Thinking..."
+        "Stalking prey...", "Pouncing on data...", "Eating bytes...", "Digesting info...",
+        "Sharpening claws...", "Focusing...", "Eyes dilated...", "Tail twitching..."
     ]
 };
 
@@ -126,7 +129,7 @@ const ChatBot = ({ currentView }) => {
     // ... existing state ...
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'model', text: 'Hello! I am SymbioBot. Ask me about your DNA sequences or select a topic below!' }
+        { role: 'model', text: 'Meow! I am SymbioCat. Ask me about your DNA sequences or select a topic below!' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -140,6 +143,7 @@ const ChatBot = ({ currentView }) => {
     const thoughtRef = useRef(null);
     const dot1Ref = useRef(null);
     const dot2Ref = useRef(null);
+    const timeoutRef = useRef(null); // Ref to track timeout for cleanup
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -151,7 +155,7 @@ const ChatBot = ({ currentView }) => {
 
     // --- Mascot Behavior Logic ---
 
-    // 1. Smooth Floating Animation (Zero Gravity)
+    // 1. Tennis Ball Bouncing Animation
     useEffect(() => {
         if (isOpen) return;
 
@@ -161,35 +165,30 @@ const ChatBot = ({ currentView }) => {
         // Reset any previous tweens
         gsap.killTweensOf(container);
 
-        // Continuous smooth floating (Sine Waves)
-        // Vertical Float
-        gsap.to(container, {
-            y: -20,
-            duration: 2.5,
-            ease: "sine.inOut",
+        // Initial setup
+        gsap.set(container, { x: 0, y: 0, rotation: 0 });
+
+        // Gentle "Pet" Float/Bounce
+        const floatAnim = gsap.to(container, {
+            y: -15, // Gentle up/down
+            duration: 2,
+            repeat: -1,
             yoyo: true,
-            repeat: -1
+            ease: "sine.inOut"
         });
 
-        // Horizontal Drift (Unsynchronized for natural feel)
-        gsap.to(container, {
-            x: 10,
-            duration: 3.2,
-            ease: "sine.inOut",
+        // Slow "Pet" Rocking/Rotation
+        const rockAnim = gsap.to(container, {
+            rotation: 5, // Slight tilt left/right
+            duration: 3,
+            repeat: -1,
             yoyo: true,
-            repeat: -1
-        });
-
-        // Slight Rotation/Tilt
-        gsap.to(container, {
-            rotation: 5,
-            duration: 4,
-            ease: "sine.inOut",
-            yoyo: true,
-            repeat: -1
+            ease: "sine.inOut"
         });
 
         return () => {
+            floatAnim.kill();
+            rockAnim.kill();
             gsap.killTweensOf(container);
         };
     }, [isOpen]);
@@ -303,6 +302,7 @@ const ChatBot = ({ currentView }) => {
             <>
                 <ChatAnimations />
                 <div
+                    key="minimized-mascot"
                     ref={botContainerRef}
                     style={{
                         position: 'fixed',
@@ -353,25 +353,27 @@ const ChatBot = ({ currentView }) => {
     return (
         <>
             <ChatAnimations />
-            <div style={{
-                position: 'fixed',
-                bottom: '2rem',
-                right: '2rem',
-                width: '380px',
-                height: '600px',
-                background: 'rgba(255, 255, 255, 0.92)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                borderRadius: '24px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.6)',
-                display: 'flex',
-                flexDirection: 'column',
-                zIndex: 1000,
-                fontFamily: 'inherit',
-                animation: 'chatPopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                overflow: 'hidden',
-                color: theme.colors.textMain
-            }}>
+            <div
+                key="open-chat-window"
+                style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    width: '380px',
+                    height: '600px',
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderRadius: '24px',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.6)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    zIndex: 1000,
+                    fontFamily: 'inherit',
+                    animation: 'chatPopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                    overflow: 'hidden',
+                    color: theme.colors.textMain
+                }}>
                 {/* Header */}
                 <div style={{
                     padding: '1.25rem',
@@ -397,7 +399,7 @@ const ChatBot = ({ currentView }) => {
                             </div>
                         </div>
                         <div>
-                            <div style={{ fontWeight: 700, color: theme.colors.textMain, fontSize: '1.05rem' }}>SymbioBot</div>
+                            <div style={{ fontWeight: 700, color: theme.colors.textMain, fontSize: '1.05rem' }}>SymbioCat</div>
                             <div style={{ fontSize: '0.75rem', color: theme.colors.accentGreen, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.colors.accentGreen }}></span>
                                 Online
