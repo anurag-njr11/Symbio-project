@@ -9,6 +9,7 @@ import { parseFasta } from './utils';
 import { GlobalStyles, styles, theme } from './theme';
 import ReactMarkdown from 'react-markdown';
 import ChatBot from './components/ChatBot';
+import CustomCursor from './components/CustomCursor';
 import AnimatedBackground from './components/AnimatedBackground';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -25,6 +26,19 @@ const SummaryView = () => {
   useEffect(() => {
     fetchSummary();
   }, []);
+
+  // Add Hover Styles
+  const cardHoverStyle = `
+    .summary-card {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .summary-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15) !important;
+      border-color: ${theme.colors.primaryBlue} !important;
+      z-index: 10;
+    }
+  `;
 
   const fetchSummary = async () => {
     try {
@@ -84,6 +98,7 @@ const SummaryView = () => {
 
   return (
     <div style={{ ...styles.glassPanel, padding: '3rem', minHeight: '80vh', position: 'relative', overflow: 'hidden' }}>
+      <style>{cardHoverStyle}</style>
 
       {/* Header */}
       <div style={{ marginBottom: '3rem', position: 'relative', zIndex: 1 }}>
@@ -107,60 +122,63 @@ const SummaryView = () => {
 
         {/* Card 1 */}
         <div className="summary-card" style={{
-          background: theme.gradients.cardBlue,
+          background: 'rgba(255, 255, 255, 0.8)',
           padding: '2rem',
           borderRadius: '20px',
-          border: `1px solid ${theme.colors.glassBorder}`,
-          position: 'relative'
+          border: `1px solid ${theme.colors.primaryBlue}40`, // Stronger border
+          position: 'relative',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
         }}>
           <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
             <Database size={48} color={theme.colors.primaryBlue} />
           </div>
-          <div style={{ color: theme.colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>TOTAL SEQUENCES</div>
+          <div style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>TOTAL SEQUENCES</div>
           <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.primaryBlue }}>
             {stats.count}
           </div>
-          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: theme.colors.textMuted }}>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#475569' }}>
             Uploaded files
           </div>
         </div>
 
         {/* Card 2 */}
         <div className="summary-card" style={{
-          background: theme.gradients.cardPurple,
+          background: 'rgba(255, 255, 255, 0.8)',
           padding: '2rem',
           borderRadius: '20px',
-          border: `1px solid ${theme.colors.glassBorder}`,
-          position: 'relative'
+          border: `1px solid ${theme.colors.primaryPurple}40`,
+          position: 'relative',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
         }}>
           <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
             <Activity size={48} color={theme.colors.primaryPurple} />
           </div>
-          <div style={{ color: theme.colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>AVG GC CONTENT</div>
+          <div style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>AVG GC CONTENT</div>
           <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.primaryPurple }}>
             {stats.avgGc}%
           </div>
-          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: theme.colors.textMuted }}>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#475569' }}>
             Nucleotide composition
           </div>
         </div>
 
         {/* Card 3 */}
         <div className="summary-card" style={{
-          background: theme.gradients.cardGreen,
+          background: 'rgba(255, 255, 255, 0.8)',
           padding: '2rem',
           borderRadius: '20px',
-          border: `1px solid ${theme.colors.glassBorder}`,
-          position: 'relative'
+          border: `1px solid ${theme.colors.accentGreen}40`,
+          position: 'relative',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
         }}>
           <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', opacity: 0.2 }}>
             <Dna size={48} color={theme.colors.accentGreen} />
           </div>
-          <div style={{ color: theme.colors.textMuted, marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>TOTAL BASE PAIRS</div>
+          <div style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 700 }}>TOTAL BASE PAIRS</div>
           <div style={{ fontSize: '3rem', fontWeight: 800, color: theme.colors.accentGreen }}>
             {stats.totalBp.toLocaleString()}
           </div>
-          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: theme.colors.textMuted }}>
+          <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#475569' }}>
             Combined length
           </div>
         </div>
@@ -168,12 +186,12 @@ const SummaryView = () => {
 
       {/* AI Analysis Section */}
       <div className="summary-card" style={{
-        background: 'rgba(255,255,255,0.4)',
-        backdropFilter: 'blur(20px)',
+        background: '#ffffff', // Solid White
         borderRadius: '24px',
-        border: `1px solid ${theme.colors.primaryPurple}30`, // Subtle purple border
+        border: `1px solid ${theme.colors.primaryPurple}`, // Solid Border
         padding: '3rem',
-        boxShadow: '0 20px 40px -10px rgba(124, 58, 237, 0.1)'
+        boxShadow: '0 10px 30px -5px rgba(0,0,0,0.1)',
+        marginTop: '3rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
           <div style={{
@@ -200,24 +218,25 @@ const SummaryView = () => {
             {error}
           </div>
         ) : (
-          <div style={{ lineHeight: '1.8', color: theme.colors.textSecondary }}>
+          <div style={{ lineHeight: '1.8', color: '#0f172a', fontSize: '1.05rem' }}> {/* Almost Black text */}
             <ReactMarkdown
               components={{
-                h1: ({ node, ...props }) => <h1 style={{ color: theme.colors.primaryBlue, marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.8rem' }} {...props} />,
-                h2: ({ node, ...props }) => <h2 style={{ color: theme.colors.primaryPurple, marginTop: '1.5rem', marginBottom: '0.8rem', fontSize: '1.4rem' }} {...props} />,
-                h3: ({ node, ...props }) => <h3 style={{ color: theme.colors.textMain, marginTop: '1.2rem', marginBottom: '0.5rem', fontSize: '1.1rem', fontWeight: 700 }} {...props} />,
-                p: ({ node, ...props }) => <p style={{ marginBottom: '1.2rem', fontSize: '1.05rem' }} {...props} />,
-                ul: ({ node, ...props }) => <ul style={{ marginLeft: '1.5rem', marginBottom: '1.2rem' }} {...props} />,
-                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem', paddingLeft: '0.5rem' }} {...props} />,
-                strong: ({ node, ...props }) => <strong style={{ color: theme.colors.primaryBlue, fontWeight: 600 }} {...props} />
+                h1: ({ node, ...props }) => <h1 style={{ color: '#1e3a8a', marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.8rem', fontWeight: 800 }} {...props} />,
+                h2: ({ node, ...props }) => <h2 style={{ color: '#1e40af', marginTop: '1.25rem', marginBottom: '0.75rem', fontSize: '1.5rem', fontWeight: 700 }} {...props} />,
+                h3: ({ node, ...props }) => <h3 style={{ color: '#1d4ed8', marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }} {...props} />,
+                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', color: '#334155' }} {...props} />, // Dark Slate Paragraphs
+                strong: ({ node, ...props }) => <strong style={{ color: '#0f172a', fontWeight: 700 }} {...props} />,
+                ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
+                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem', color: '#334155' }} {...props} />,
               }}
             >
               {summary}
             </ReactMarkdown>
           </div>
         )}
-      </div>
-    </div>
+
+      </div >
+    </div >
   );
 };
 
@@ -247,7 +266,6 @@ function App() {
     }
   }, []);
 
-  // Fetch uploads whenever auth is checked/user changes or view changes to dashboard/history
   // Fetch uploads whenever auth is checked/user changes or view changes to dashboard/history
   useEffect(() => {
     if (authChecked && (activeView === 'dashboard' || activeView === 'reports' || activeView === 'summary')) {
@@ -383,6 +401,7 @@ function App() {
       setPreviousView('dashboard');
       setSelectedSequence(newUpload);
       setActiveView('view_report');
+      setActiveView('view_report');
 
     } catch (error) {
       console.error("Failed to upload file", error);
@@ -403,6 +422,7 @@ function App() {
       const filtered = guestUploads.filter(item => item.id !== id);
       localStorage.setItem('guestUploads', JSON.stringify(filtered));
       setUploads(prev => prev.filter(item => item.id !== id));
+      setUploads(prev => prev.filter(item => item.id !== id));
       return;
     }
 
@@ -414,6 +434,7 @@ function App() {
       });
 
       if (response.ok) {
+        setUploads(prev => prev.filter(item => item.id !== id));
         setUploads(prev => prev.filter(item => item.id !== id));
       } else {
         alert('Failed to delete');
@@ -506,6 +527,7 @@ function App() {
     <>
       <GlobalStyles />
       <AnimatedBackground />
+      <CustomCursor />
       <div style={styles.appContainer} ref={appRef}>
         <Sidebar activeView={activeView === 'view_report' ? 'reports' : activeView} onNavigate={setActiveView} user={user} onLogout={handleLogout} />
         <main style={styles.mainContent}>

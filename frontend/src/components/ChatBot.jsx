@@ -1,9 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, Loader, HelpCircle } from 'lucide-react';
+import { X, Send, HelpCircle, Cloud } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { theme } from '../theme';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import MascotAvatar from './MascotAvatar';
 
-// Animation Keyframes injected into current page
+gsap.registerPlugin(ScrollTrigger);
+
+// Animation Styles
 const ChatAnimations = () => (
     <style>{`
     @keyframes chatPopIn {
@@ -18,10 +23,48 @@ const ChatAnimations = () => (
       0%, 80%, 100% { transform: translateY(0); }
       40% { transform: translateY(-5px); }
     }
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); } 
-      70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+    .thought-cloud {
+        position: absolute;
+        bottom: 120%;
+        right: 0;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 50%;
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.15);
+        font-size: 0.9rem;
+        color: #1e293b;
+        white-space: nowrap;
+        opacity: 0;
+        transform: scale(0);
+        pointer-events: none;
+        border: 2px solid ${theme.colors.bgDark};
+        font-weight: 600;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 100px;
+        min-height: 80px;
+    }
+    .thought-dot-1 {
+        position: absolute;
+        bottom: 110%;
+        right: 20px;
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        opacity: 0;
+    }
+    .thought-dot-2 {
+        position: absolute;
+        bottom: 115%;
+        right: 15px;
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        opacity: 0;
     }
   `}</style>
 );
@@ -57,21 +100,46 @@ const PREDEFINED_QA = [
     {
         question: "Valid file formats?",
         answer: "Symbio currently supports **.fasta** and **.txt** files. Ensure your file starts with a `>` header line followed by the nucleotide sequence (A, T, G, C)."
-    },
-    {
-        question: "How is Length calculated?",
-        answer: "Sequence length is simply the total count of valid nucleotides (A, T, G, C) in your sequence, excluding whitespace and headers."
     }
 ];
 
+const THOUGHTS = {
+    idle: [
+        "Scanning...", "I like DNA!", "So quiet...", "Analysis Mode",
+        "Data is beautiful", "Beep boop?", "Checking systems...", "All green!",
+        "Waiting for input...", "Do you have a sequence?", "I can help!",
+        "Did you know?", "Science rulez!", "Ready to work!", "Hello world!",
+        "My CPU is cool", "No bugs here!", "Just floating...", "Calculations..."
+    ],
+    hover: [
+        "Hi friend!", "Click me!", "Need help?", "Let's chat!",
+        "I'm ticklish!", "Ask me anything!", "I know science!", "Bot ready!",
+        "At your service!", "Ooh, attention!", "Hello human!", "Query me!"
+    ],
+    working: [
+        "Reading this...", "Processing...", "Decoding...", "Crunching numbers...",
+        "Analyzing patterns...", "Comparing bases...", "Running algo...", "Thinking..."
+    ]
+};
+
 const ChatBot = ({ currentView }) => {
+    // ... existing state ...
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'model', text: 'Hello! I are SymbioBot. Ask me about your DNA sequences or select a topic below!' }
+        { role: 'model', text: 'Hello! I am SymbioBot. Ask me about your DNA sequences or select a topic below!' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Mascot State
+    const [mascotEmotion, setMascotEmotion] = useState('idle');
+    const [thoughtText, setThoughtText] = useState('');
+
     const messagesEndRef = useRef(null);
+    const botContainerRef = useRef(null);
+    const thoughtRef = useRef(null);
+    const dot1Ref = useRef(null);
+    const dot2Ref = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,13 +149,102 @@ const ChatBot = ({ currentView }) => {
         scrollToBottom();
     }, [messages, isOpen]);
 
+    // --- Mascot Behavior Logic ---
+
+    // 1. Smooth Floating Animation (Zero Gravity)
+    useEffect(() => {
+        if (isOpen) return;
+
+        const container = botContainerRef.current;
+        if (!container) return;
+
+        // Reset any previous tweens
+        gsap.killTweensOf(container);
+
+        // Continuous smooth floating (Sine Waves)
+        // Vertical Float
+        gsap.to(container, {
+            y: -20,
+            duration: 2.5,
+            ease: "sine.inOut",
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Horizontal Drift (Unsynchronized for natural feel)
+        gsap.to(container, {
+            x: 10,
+            duration: 3.2,
+            ease: "sine.inOut",
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Slight Rotation/Tilt
+        gsap.to(container, {
+            rotation: 5,
+            duration: 4,
+            ease: "sine.inOut",
+            yoyo: true,
+            repeat: -1
+        });
+
+        return () => {
+            gsap.killTweensOf(container);
+        };
+    }, [isOpen]);
+
+    // 2. Random Thoughts (Idle)
+    useEffect(() => {
+        if (isOpen) return;
+
+        const think = () => {
+            if (thoughtText || mascotEmotion !== 'idle') return;
+            const text = THOUGHTS.idle[Math.floor(Math.random() * THOUGHTS.idle.length)];
+            showThought(text, 4000);
+
+            setMascotEmotion('thinking');
+            setTimeout(() => setMascotEmotion('idle'), 4000);
+
+            setTimeout(think, Math.random() * 8000 + 8000);
+        };
+
+        const timer = setTimeout(think, 3000);
+        return () => clearTimeout(timer);
+    }, [isOpen, thoughtText, mascotEmotion]);
+
+    // 3. Scroll Reaction - REMOVED per user request
+    // useEffect(() => {
+    //     if (isOpen) return;
+    //     ... logic removed ...
+    // }, [isOpen, mascotEmotion]);
+
+    const showThought = (text, duration = 3000) => {
+        if (text === thoughtText && duration < 1000) return; // Debounce fast updates
+
+        setThoughtText(text);
+
+        // Animate Cloud Appearance
+        const tl = gsap.timeline();
+        tl.to([dot1Ref.current, dot2Ref.current], { opacity: 1, duration: 0.2, stagger: 0.1 });
+        tl.to(thoughtRef.current, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.7)" });
+
+        if (duration) {
+            setTimeout(() => {
+                gsap.to(thoughtRef.current, { opacity: 0, scale: 0, duration: 0.3 });
+                gsap.to([dot1Ref.current, dot2Ref.current], { opacity: 0, duration: 0.2, delay: 0.1 });
+                setTimeout(() => setThoughtText(''), 300);
+            }, duration);
+        }
+    };
+
     const handleQuestionClick = (qa) => {
         setMessages(prev => [...prev, { role: 'user', text: qa.question }]);
         setIsLoading(true);
         setTimeout(() => {
             setMessages(prev => [...prev, { role: 'model', text: qa.answer }]);
             setIsLoading(false);
-        }, 600); // Fake delay for natural feel
+        }, 600);
     };
 
     const handleSubmit = async (e) => {
@@ -100,7 +257,6 @@ const ChatBot = ({ currentView }) => {
         setIsLoading(true);
 
         try {
-            // Check for exact match in predefined QA first (optional, but good for consistency)
             const localMatch = PREDEFINED_QA.find(qa => qa.question.toLowerCase() === userMessage.toLowerCase());
             if (localMatch) {
                 setTimeout(() => {
@@ -110,7 +266,6 @@ const ChatBot = ({ currentView }) => {
                 return;
             }
 
-            // Prepare history for context
             const history = messages.slice(-10).map(m => ({
                 role: m.role === 'model' ? 'model' : 'user',
                 text: m.text
@@ -140,40 +295,61 @@ const ChatBot = ({ currentView }) => {
         }
     };
 
+    // --- Render ---
+
+    // 1. Minimized (Mascot Mode)
     if (!isOpen) {
         return (
             <>
                 <ChatAnimations />
-                <button
-                    onClick={() => setIsOpen(true)}
+                <div
+                    ref={botContainerRef}
                     style={{
                         position: 'fixed',
-                        bottom: '2rem',
-                        right: '2rem',
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '50%',
-                        background: theme.gradients.main,
-                        color: '#fff',
-                        border: 'none',
-                        boxShadow: '0 8px 24px rgba(37, 99, 235, 0.4)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        bottom: '3rem', // Higher up
+                        right: '3rem',
                         zIndex: 1000,
-                        transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                        animation: 'pulseGlow 2s infinite'
+                        cursor: 'pointer'
                     }}
-                    onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                    onMouseOut={e => e.currentTarget.style.transform = 'scale(1.0)'}
+                    onClick={() => setIsOpen(true)}
+                    onMouseEnter={() => {
+                        setMascotEmotion('happy');
+                        // Show random hover thought
+                        const text = THOUGHTS.hover[Math.floor(Math.random() * THOUGHTS.hover.length)];
+                        showThought(text, 0); // 0 means don't auto-hide immediately, let leave handle it
+
+                        // Scale up container slightly
+                        gsap.to(botContainerRef.current, { scale: 1.15, duration: 0.3, ease: "back.out(1.7)" });
+                    }}
+                    onMouseLeave={() => {
+                        setMascotEmotion('idle');
+                        // Hide thought
+                        gsap.to(thoughtRef.current, { opacity: 0, scale: 0, duration: 0.3 });
+                        gsap.to([dot1Ref.current, dot2Ref.current], { opacity: 0, duration: 0.2 });
+                        setThoughtText('');
+
+                        // Scale back down
+                        gsap.to(botContainerRef.current, { scale: 1, duration: 0.3, ease: "power2.out" });
+                    }}
                 >
-                    <MessageSquare size={28} strokeWidth={2.5} />
-                </button>
+                    {/* Thought Cloud */}
+                    <div ref={dot1Ref} className="thought-dot-1"></div>
+                    <div ref={dot2Ref} className="thought-dot-2"></div>
+                    <div ref={thoughtRef} className="thought-cloud">
+                        {thoughtText}
+                        {/* Cloud bumps visual decoration */}
+                        <div style={{ position: 'absolute', top: '-10px', left: '20px', width: '30px', height: '30px', background: 'white', borderRadius: '50%', zIndex: -1 }}></div>
+                        <div style={{ position: 'absolute', top: '-15px', right: '20px', width: '40px', height: '40px', background: 'white', borderRadius: '50%', zIndex: -1 }}></div>
+                    </div>
+
+                    {/* Mascot */}
+                    <MascotAvatar emotion={mascotEmotion} size={90} />
+                </div>
             </>
         );
     }
 
+    // 2. Open Chat Window
     return (
         <>
             <ChatAnimations />
@@ -183,11 +359,11 @@ const ChatBot = ({ currentView }) => {
                 right: '2rem',
                 width: '380px',
                 height: '600px',
-                background: 'rgba(255, 255, 255, 0.85)', // Light Glassmorphism
+                background: 'rgba(255, 255, 255, 0.92)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 borderRadius: '24px',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.6)',
                 display: 'flex',
                 flexDirection: 'column',
                 zIndex: 1000,
@@ -203,20 +379,22 @@ const ChatBot = ({ currentView }) => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    background: 'rgba(255,255,255,0.5)'
+                    background: 'rgba(255,255,255,0.6)'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '10px',
-                            background: theme.gradients.main,
+                            width: '42px',
+                            height: '42px',
+                            background: 'transparent',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
+                            overflow: 'visible'
                         }}>
-                            <Bot size={20} color="#fff" />
+                            {/* Mini Avatar in Header */}
+                            <div style={{ transform: 'scale(0.6) translateY(4px)' }}>
+                                <MascotAvatar emotion="idle" size={50} />
+                            </div>
                         </div>
                         <div>
                             <div style={{ fontWeight: 700, color: theme.colors.textMain, fontSize: '1.05rem' }}>SymbioBot</div>
@@ -241,14 +419,6 @@ const ChatBot = ({ currentView }) => {
                             justifyContent: 'center',
                             transition: 'all 0.2s'
                         }}
-                        onMouseOver={e => {
-                            e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
-                            e.currentTarget.style.color = theme.colors.textMain;
-                        }}
-                        onMouseOut={e => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.color = theme.colors.textMuted;
-                        }}
                     >
                         <X size={20} />
                     </button>
@@ -272,10 +442,8 @@ const ChatBot = ({ currentView }) => {
                         }}>
                             {msg.role === 'model' && (
                                 <div style={{
-                                    width: '28px',
-                                    height: '28px',
-                                    borderRadius: '8px',
-                                    background: 'rgba(0,0,0,0.05)',
+                                    width: '32px',
+                                    height: '32px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -283,7 +451,10 @@ const ChatBot = ({ currentView }) => {
                                     marginTop: '4px',
                                     flexShrink: 0
                                 }}>
-                                    <Bot size={16} color={theme.colors.textMuted} />
+                                    {/* Tiny Bot Icon for Messages */}
+                                    <div style={{ transform: 'scale(0.4)' }}>
+                                        <MascotAvatar emotion="happy" size={50} />
+                                    </div>
                                 </div>
                             )}
                             <div style={{
@@ -292,14 +463,13 @@ const ChatBot = ({ currentView }) => {
                                 borderRadius: '16px',
                                 borderTopLeftRadius: msg.role === 'model' ? '4px' : '16px',
                                 borderTopRightRadius: msg.role === 'user' ? '4px' : '16px',
-                                // User: Primary Gradient, Bot: Light Gray
-                                background: msg.role === 'user' ? theme.gradients.main : '#f1f5f9',
+                                background: msg.role === 'user' ? theme.gradients.main : 'rgba(255,255,255,0.8)',
                                 color: msg.role === 'user' ? '#fff' : theme.colors.textMain,
                                 fontSize: '0.95rem',
                                 lineHeight: '1.5',
                                 boxShadow: msg.role === 'user'
                                     ? '0 4px 15px rgba(37, 99, 235, 0.2)'
-                                    : 'none',
+                                    : '0 2px 5px rgba(0,0,0,0.05)',
                                 border: msg.role === 'model' ? '1px solid rgba(0,0,0,0.05)' : 'none'
                             }}>
                                 <ReactMarkdown
@@ -420,9 +590,7 @@ const ChatBot = ({ currentView }) => {
                             padding: '1rem',
                             borderRadius: '12px',
                             border: 'none',
-                            background: isLoading || !input.trim()
-                                ? '#e2e8f0'
-                                : theme.gradients.main,
+                            background: isLoading || !input.trim() ? '#e2e8f0' : theme.gradients.main,
                             color: isLoading || !input.trim() ? theme.colors.textMuted : '#fff',
                             cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer',
                             transition: 'all 0.2s',
