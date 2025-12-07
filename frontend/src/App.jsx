@@ -11,7 +11,10 @@ import ReactMarkdown from 'react-markdown';
 import ChatBot from './components/ChatBot';
 import AnimatedBackground from './components/AnimatedBackground';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Sparkles, Dna, Database, Activity } from 'lucide-react';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const SummaryView = () => {
   const [summary, setSummary] = useState('');
@@ -65,11 +68,16 @@ const SummaryView = () => {
   useEffect(() => {
     if (!loading) {
       gsap.from(".summary-card", {
-        y: 30,
+        y: 40,
         opacity: 0,
-        duration: 0.6,
+        duration: 0.8,
         stagger: 0.15,
-        ease: "back.out(1.2)"
+        ease: "back.out(1.2)",
+        scrollTrigger: {
+          trigger: ".summary-card",
+          start: "top 85%",
+          toggleActions: "play none none reverse"
+        }
       });
     }
   }, [loading]);

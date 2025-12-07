@@ -3,15 +3,29 @@ import { FileText, Eye, Trash2 } from 'lucide-react';
 import { styles, theme } from '../theme';
 import gsap from 'gsap';
 
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
 const HistoryView = ({ uploads, onViewReport, onDelete }) => {
     const tableRef = useRef(null);
 
     useEffect(() => {
         if (uploads && uploads.length > 0) {
-            gsap.fromTo(".history-row",
-                { opacity: 0, x: -20 },
-                { opacity: 1, x: 0, stagger: 0.1, duration: 0.5, ease: "power2.out" }
-            );
+            ScrollTrigger.batch(".history-row", {
+                onEnter: batch => gsap.to(batch, {
+                    opacity: 1,
+                    x: 0,
+                    stagger: 0.1,
+                    overwrite: true,
+                    duration: 0.6,
+                    ease: "power2.out"
+                }),
+                start: "top 90%",
+            });
+
+            // Allow re-running on updates
+            return () => {
+                ScrollTrigger.getAll().forEach(t => t.kill());
+            };
         }
     }, [uploads]);
 

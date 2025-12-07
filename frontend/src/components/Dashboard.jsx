@@ -90,30 +90,49 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
         const ctx = gsap.context(() => {
             // Metrics Animation
             gsap.from(".metric-card", {
-                y: 30,
+                y: 50,
                 opacity: 0,
                 duration: 0.8,
                 stagger: 0.15,
-                ease: "back.out(1.7)"
+                ease: "back.out(1.7)",
+                scrollTrigger: {
+                    trigger: ".metric-card",
+                    start: "top 85%",
+                    toggleActions: "play none none reverse"
+                }
             });
 
             // Charts Animation - Delayed
             if (chartsRef.current) {
                 gsap.from(chartsRef.current.children, {
-                    y: 40,
+                    y: 60,
                     opacity: 0,
                     duration: 0.8,
                     stagger: 0.2,
-                    delay: 0.3,
-                    ease: "power3.out"
+                    ease: "power3.out",
+                    scrollTrigger: {
+                        trigger: chartsRef.current,
+                        start: "top 80%",
+                        toggleActions: "play none none reverse"
+                    }
                 });
             }
 
             // Table Animation - More Delayed
             if (tableRef.current) {
                 gsap.fromTo(tableRef.current,
-                    { y: 40, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 0.8, delay: 0.6, ease: "power3.out" }
+                    { y: 60, opacity: 0 },
+                    {
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        ease: "power3.out",
+                        scrollTrigger: {
+                            trigger: tableRef.current,
+                            start: "top 85%",
+                            toggleActions: "play none none reverse"
+                        }
+                    }
                 );
             }
 
