@@ -1,4 +1,5 @@
 const Sequence = require('../database/Sequence');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Generate textual biological interpretation (Fix #9)
 async function generateInterpretation(data) {
@@ -265,7 +266,6 @@ exports.deleteById = async (req, res) => {
 };
 
 // OpenAI Summary Generation
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 exports.generateSummary = async (req, res) => {
     try {

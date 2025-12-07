@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { UploadCloud, FileCode, Activity, Clock, Eye } from 'lucide-react';
+import { UploadCloud, FileCode, Activity, Clock } from 'lucide-react';
 import { styles, theme } from '../theme';
 import gsap from 'gsap';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
@@ -94,33 +94,30 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
     useEffect(() => {
         const ctx = gsap.context(() => {
             // Metrics Animation
-            gsap.from(".metric-card", {
-                y: 50,
-                opacity: 0,
-                duration: 0.8,
-                stagger: 0.15,
-                ease: "back.out(1.7)",
-                scrollTrigger: {
-                    trigger: ".metric-card",
-                    start: "top 85%",
-                    toggleActions: "play none none reverse"
+            gsap.fromTo(".metric-card",
+                { y: 50, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.8,
+                    stagger: 0.15,
+                    ease: "back.out(1.7)"
                 }
-            });
+            );
 
             // Charts Animation - Delayed
             if (chartsRef.current) {
-                gsap.from(chartsRef.current.children, {
-                    y: 60,
-                    opacity: 0,
-                    duration: 0.8,
-                    stagger: 0.2,
-                    ease: "power3.out",
-                    scrollTrigger: {
-                        trigger: chartsRef.current,
-                        start: "top 80%",
-                        toggleActions: "play none none reverse"
+                gsap.fromTo(chartsRef.current.children,
+                    { y: 60, opacity: 0 },
+                    {
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        stagger: 0.2,
+                        ease: "power3.out",
+                        delay: 0.2
                     }
-                });
+                );
             }
 
             // Table Animation - More Delayed
@@ -132,11 +129,7 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
                         opacity: 1,
                         duration: 0.8,
                         ease: "power3.out",
-                        scrollTrigger: {
-                            trigger: tableRef.current,
-                            start: "top 85%",
-                            toggleActions: "play none none reverse"
-                        }
+                        delay: 0.4
                     }
                 );
             }
@@ -247,7 +240,7 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
                                 <YAxis stroke={theme.colors.textMuted} fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
                                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar name="Sequence Count" dataKey="count" radius={[8, 8, 0, 0]}>
+                                <Bar name="Sequence Count" dataKey="count" radius={[8, 8, 0, 0]} isAnimationActive={false}>
                                     {gcBuckets.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={index % 2 === 0 ? theme.colors.primaryBlue : theme.colors.primaryPurple} fillOpacity={0.9} />
                                     ))}
@@ -272,7 +265,7 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
                                 <YAxis type="category" dataKey="name" stroke={theme.colors.textMuted} fontSize={12} tickLine={false} axisLine={false} width={100} />
                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
                                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar name="Length (bp)" dataKey="length" fill={theme.colors.accentGreen} radius={[0, 8, 8, 0]} fillOpacity={0.9} barSize={25} />
+                                <Bar name="Length (bp)" dataKey="length" fill={theme.colors.accentGreen} radius={[0, 8, 8, 0]} fillOpacity={0.9} barSize={25} isAnimationActive={false} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
