@@ -5,6 +5,7 @@ import { theme } from '../theme';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import MascotAvatar from './MascotAvatar';
+import { useMascot } from '../contexts/MascotContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,52 +20,33 @@ const ChatAnimations = () => (
       0% { opacity: 0; transform: translateY(10px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-    @keyframes dotBounce {
-      0%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-5px); }
-    }
     .thought-cloud {
         position: absolute;
-        bottom: 120%;
+        bottom: 105%;
         right: 0;
         background: white;
-        padding: 1rem 1.5rem;
-        border-radius: 50%;
-        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.15);
-        font-size: 0.9rem;
-        color: #1e293b;
-        white-space: nowrap;
+        padding: 1.25rem;
+        border-radius: 20px;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 0.85rem;
+        color: #334155;
         opacity: 0;
         transform: scale(0);
         pointer-events: none;
-        border: 2px solid ${theme.colors.bgDark};
-        font-weight: 600;
+        border: 1px solid ${theme.colors.borderColor};
+        font-weight: 500;
         z-index: 10;
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 100px;
+        width: 150px;
+        height: auto;
         min-height: 80px;
-    }
-    .thought-dot-1 {
-        position: absolute;
-        bottom: 110%;
-        right: 20px;
-        width: 12px;
-        height: 12px;
-        background: white;
-        border-radius: 50%;
-        opacity: 0;
-    }
-    .thought-dot-2 {
-        position: absolute;
-        bottom: 115%;
-        right: 15px;
-        width: 18px;
-        height: 18px;
-        background: white;
-        border-radius: 50%;
-        opacity: 0;
+        aspect-ratio: 1; 
+        white-space: normal;
+        text-align: center;
+        line-height: 1.4;
     }
   `}</style>
 );
@@ -86,42 +68,39 @@ const TypingIndicator = () => (
 
 const PREDEFINED_QA = [
     {
-        question: "What is GC Content?",
-        answer: "**GC Content** is the percentage of nitrogenous bases in a DNA or RNA molecule that are either guanine (G) or cytosine (C). High GC content often indicates higher thermal stability."
-    },
-    {
-        question: "What is an ORF?",
-        answer: "An **ORF (Open Reading Frame)** is a continuous stretch of codons that has the potential to encode a protein. It starts with a start codon (usually ATG) and ends with a stop codon."
+        question: "What is Symbio?",
+        answer: "**Symbio** is your personal genomic analysis lab! We help you analyze DNA sequences, check for ORFs, and calculate GC content—all with a purr-fect interface!"
     },
     {
         question: "How do I upload?",
-        answer: "Navigate to the **Dashboard** or **Upload** tab, click inside the upload box, and select your `.fasta` or `.txt` file. You can also paste your sequence directly!"
+        answer: "Just head to the **Dashboard** or **Upload** tab! You can drag & drop your `.fasta` or `.txt` files there. I'll watch the upload progress for you! 😸"
     },
     {
-        question: "Valid file formats?",
-        answer: "Symbio currently supports **.fasta** and **.txt** files. Ensure your file starts with a `>` header line followed by the nucleotide sequence (A, T, G, C)."
+        question: "What is GC Content?",
+        answer: "**GC Content** is the percentage of G & C bases in your DNA. High GC often means your sequence is tough and heat-resistant! Symbio calculates this automatically."
+    },
+    {
+        question: "Can I see past reports?",
+        answer: "Absolutely! The **History** tab keeps track of all your past adventures in DNA analysis. You can revisit them anytime!"
     }
 ];
 
 const THOUGHTS = {
     idle: [
-        "Meow?", "Purr...", "Chasing data mice...", "Grooming my code...",
-        "Any treats?", "I love loops!", "Cat-culating...", "Pawsitive vibes!",
-        "Where is the red dot?", "Nap time soon?", "Hunting for bugs...",
-        "Zoomies loading...", "Data is tasty!", "Soft kitty...", "Warm kitty...",
-        "Little ball of fur...", "Happy kitty...", "Sleepy kitty...",
-        // Energetic
-        "Zoomies!", "Pounce!", "I'm fast!", "Catch me!",
-        "Boing!", "Leap!", "Parkour!", "Cat nip kicks in!", "Yippee!"
+        "Symbio is purr-fect!", "Analyzing your DNA...", "Upload a FASTA?",
+        "I run on code & kibble!", "Checking the Dashboard...", "Any new sequences?",
+        "Symbio loves Biology!", "GC Content? High!", "Hunting for ORFs...",
+        "Bioinformatics is fun!", "Meow... calculating...", "Data looks tasty!",
+        "Your research rocks!", "Symbio: DNA & Cats!", "Paws-itive results!"
     ],
     hover: [
-        "Pet me!", "Purrrrr!", "Scratch behind ears?", "Attention please!",
-        "I'm fluffy!", "Play with me!", "Meow!", "Hiss... jk!",
-        "Don't stop!", "More pets!", "You're nice!", "Rub against leg!"
+        "Ask me about Symbio!", "I can help upload!", "Click to chat!",
+        "I know Biology!", "Let's analyze data!", "Symbio helper here!",
+        "Need a hand (or paw)?", "I'm listening!", "Ready for science!"
     ],
     working: [
-        "Stalking prey...", "Pouncing on data...", "Eating bytes...", "Digesting info...",
-        "Sharpening claws...", "Focusing...", "Eyes dilated...", "Tail twitching..."
+        "Processing on Symbio...", "Reading FASTA...", " crunching numbers...",
+        "Generating report...", "Fetching insights...", "Symbio is working..."
     ]
 };
 
@@ -129,7 +108,7 @@ const ChatBot = ({ currentView }) => {
     // ... existing state ...
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'model', text: 'Meow! I am SymbioCat. Ask me about your DNA sequences or select a topic below!' }
+        { role: 'model', text: "Meow! 🐱 I'm SymbioCat. I can help you sniff out insights in the Dashboard, Upload new DNA sequences, or dig through your Report History! How can I help? Purr..." }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -193,45 +172,57 @@ const ChatBot = ({ currentView }) => {
         };
     }, [isOpen]);
 
+    const { mascotMessage, mascotEmotion: contextEmotion } = useMascot();
+
+    // React to Context Messages (Hover Explanations)
+    useEffect(() => {
+        if (mascotMessage) {
+            showThought(mascotMessage, 0); // 0 = persistent until cleared
+            setMascotEmotion(contextEmotion || 'happy');
+        } else {
+            // Clear thought when message is cleared
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            setThoughtText('');
+            gsap.to(thoughtRef.current, { opacity: 0, scale: 0, duration: 0.3 });
+            setMascotEmotion('idle');
+        }
+    }, [mascotMessage, contextEmotion]);
+
     // 2. Random Thoughts (Idle)
     useEffect(() => {
-        if (isOpen) return;
+        if (isOpen || mascotMessage) return; // Don't random think if open or explaining something
 
         const think = () => {
-            if (thoughtText || mascotEmotion !== 'idle') return;
+            if (thoughtText || mascotEmotion !== 'idle' || mascotMessage) return;
             const text = THOUGHTS.idle[Math.floor(Math.random() * THOUGHTS.idle.length)];
-            showThought(text, 4000);
+            showThought(text, 6000);
 
             setMascotEmotion('thinking');
-            setTimeout(() => setMascotEmotion('idle'), 4000);
+            setTimeout(() => setMascotEmotion('idle'), 6000);
 
-            setTimeout(think, Math.random() * 8000 + 8000);
+            setTimeout(think, Math.random() * 10000 + 10000);
         };
 
-        const timer = setTimeout(think, 3000);
+        const timer = setTimeout(think, 5000);
         return () => clearTimeout(timer);
-    }, [isOpen, thoughtText, mascotEmotion]);
+    }, [isOpen, thoughtText, mascotEmotion, mascotMessage]);
 
-    // 3. Scroll Reaction - REMOVED per user request
-    // useEffect(() => {
-    //     if (isOpen) return;
-    //     ... logic removed ...
-    // }, [isOpen, mascotEmotion]);
-
-    const showThought = (text, duration = 3000) => {
-        if (text === thoughtText && duration < 1000) return; // Debounce fast updates
+    const showThought = (text, duration = 5000) => {
+        // Clear any pending hide timer to prevent premature hiding
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
 
         setThoughtText(text);
 
         // Animate Cloud Appearance
         const tl = gsap.timeline();
-        tl.to([dot1Ref.current, dot2Ref.current], { opacity: 1, duration: 0.2, stagger: 0.1 });
         tl.to(thoughtRef.current, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.7)" });
 
-        if (duration) {
-            setTimeout(() => {
+        if (duration > 0) {
+            timeoutRef.current = setTimeout(() => {
                 gsap.to(thoughtRef.current, { opacity: 0, scale: 0, duration: 0.3 });
-                gsap.to([dot1Ref.current, dot2Ref.current], { opacity: 0, duration: 0.2, delay: 0.1 });
                 setTimeout(() => setThoughtText(''), 300);
             }, duration);
         }
@@ -243,7 +234,7 @@ const ChatBot = ({ currentView }) => {
         setTimeout(() => {
             setMessages(prev => [...prev, { role: 'model', text: qa.answer }]);
             setIsLoading(false);
-        }, 600);
+        }, 1200); // Slightly slower for readability
     };
 
     const handleSubmit = async (e) => {
@@ -261,7 +252,7 @@ const ChatBot = ({ currentView }) => {
                 setTimeout(() => {
                     setMessages(prev => [...prev, { role: 'model', text: localMatch.answer }]);
                     setIsLoading(false);
-                }, 600);
+                }, 1000); // Slower
                 return;
             }
 
@@ -316,30 +307,21 @@ const ChatBot = ({ currentView }) => {
                         setMascotEmotion('happy');
                         // Show random hover thought
                         const text = THOUGHTS.hover[Math.floor(Math.random() * THOUGHTS.hover.length)];
-                        showThought(text, 0); // 0 means don't auto-hide immediately, let leave handle it
+                        showThought(text, 5000); // Show for 5s even if mouse leaves
 
                         // Scale up container slightly
                         gsap.to(botContainerRef.current, { scale: 1.15, duration: 0.3, ease: "back.out(1.7)" });
                     }}
                     onMouseLeave={() => {
                         setMascotEmotion('idle');
-                        // Hide thought
-                        gsap.to(thoughtRef.current, { opacity: 0, scale: 0, duration: 0.3 });
-                        gsap.to([dot1Ref.current, dot2Ref.current], { opacity: 0, duration: 0.2 });
-                        setThoughtText('');
+                        // Don't hide thought immediately to allow reading
 
                         // Scale back down
                         gsap.to(botContainerRef.current, { scale: 1, duration: 0.3, ease: "power2.out" });
                     }}
                 >
-                    {/* Thought Cloud */}
-                    <div ref={dot1Ref} className="thought-dot-1"></div>
-                    <div ref={dot2Ref} className="thought-dot-2"></div>
                     <div ref={thoughtRef} className="thought-cloud">
                         {thoughtText}
-                        {/* Cloud bumps visual decoration */}
-                        <div style={{ position: 'absolute', top: '-10px', left: '20px', width: '30px', height: '30px', background: 'white', borderRadius: '50%', zIndex: -1 }}></div>
-                        <div style={{ position: 'absolute', top: '-15px', right: '20px', width: '40px', height: '40px', background: 'white', borderRadius: '50%', zIndex: -1 }}></div>
                     </div>
 
                     {/* Mascot */}

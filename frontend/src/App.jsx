@@ -14,6 +14,7 @@ import AnimatedBackground from './components/AnimatedBackground';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Sparkles, Dna, Database, Activity } from 'lucide-react';
+import { MascotProvider } from './contexts/MascotContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -514,7 +515,7 @@ function App() {
   }
 
   return (
-    <>
+    <MascotProvider>
       <GlobalStyles />
       <AnimatedBackground />
       <CustomCursor />
@@ -525,7 +526,7 @@ function App() {
         </main>
         <ChatBot currentView={activeView} />
       </div>
-    </>
+    </MascotProvider>
   );
 }
 

@@ -2,41 +2,37 @@ import React from 'react';
 import { LayoutDashboard, UploadCloud, FileText, BarChart2, Dna } from 'lucide-react';
 import { styles, theme } from '../theme';
 
+import { useMascot } from '../contexts/MascotContext';
+
 const Sidebar = ({ activeView, onNavigate, user, onLogout }) => {
+    const { setMascotMessage } = useMascot();
+
     const navItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'upload', label: 'Upload FASTA', icon: UploadCloud },
-        { id: 'reports', label: 'Upload History', icon: FileText },
-        { id: 'summary', label: 'Summary', icon: BarChart2 },
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, msg: "Home base! See all your stats here." },
+        { id: 'upload', label: 'Upload FASTA', icon: UploadCloud, msg: "Submit your DNA for analysis! I'm hungry for data." },
+        { id: 'reports', label: 'Upload History', icon: FileText, msg: "Review your past scientific discoveries!" },
+        { id: 'summary', label: 'Summary', icon: BarChart2, msg: "AI-powered insights just for you! Meow." },
     ];
 
-    const getUserDisplayName = () => {
-        if (!user) return 'Guest User';
-        if (user.name === 'Guest User' || user.role === 'guest') return 'Guest User';
-        if (user.oauthProvider) {
-            const provider = user.oauthProvider.charAt(0).toUpperCase() + user.oauthProvider.slice(1);
-            return `${user.name} (${provider})`;
-        }
-        return user.name || user.email || 'User';
+    const getUserInitials = () => {
+        if (!user || (!user.name && !user.email)) return 'G';
+        const name = user.name || user.email || 'Guest';
+        return name.slice(0, 2).toUpperCase();
     };
 
-    const getUserInitials = () => {
-        const name = user?.name || 'Guest User';
-        if (name === 'Guest User') return 'GU';
-        const parts = name.split(' ');
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return name.substring(0, 2).toUpperCase();
+    const getUserDisplayName = () => {
+        return user ? (user.name || user.email || 'Guest') : 'Guest';
     };
 
     const getUserRole = () => {
-        if (!user || user.role === 'guest' || user.name === 'Guest User') return 'Guest';
-        return 'Student';
+        return user ? (user.role || 'User') : 'Guest';
     };
+
+    // ... (rest of logic)
 
     return (
         <aside style={styles.sidebar}>
+            {/* ... header ... */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem', paddingLeft: '0.5rem' }}>
                 <div style={{
                     background: theme.gradients.main,
@@ -57,6 +53,8 @@ const Sidebar = ({ activeView, onNavigate, user, onLogout }) => {
                         key={item.id}
                         onClick={() => onNavigate(item.id)}
                         style={styles.navItem(activeView === item.id)}
+                        onMouseEnter={() => setMascotMessage(item.msg, 'happy')}
+                        onMouseLeave={() => setMascotMessage('')}
                     >
                         <item.icon size={20} />
                         {item.label}

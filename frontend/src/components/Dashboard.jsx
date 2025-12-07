@@ -4,7 +4,9 @@ import { styles, theme } from '../theme';
 import gsap from 'gsap';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
-const MetricCard = ({ title, value, icon: Icon, color, index }) => {
+import { useMascot } from '../contexts/MascotContext';
+
+const MetricCard = ({ title, value, icon: Icon, color, index, onHover, onLeave }) => {
     // Select gradient based on index or color
     const getGradient = (idx) => {
         const grads = [theme.gradients.cardBlue, theme.gradients.cardPurple, theme.gradients.cardCyan, theme.gradients.cardGreen];
@@ -19,6 +21,7 @@ const MetricCard = ({ title, value, icon: Icon, color, index }) => {
                 background: `${getGradient(index)}, ${theme.colors.glassBg}`
             }}
             onMouseEnter={(e) => {
+                if (onHover) onHover();
                 gsap.to(e.currentTarget, {
                     y: -8,
                     boxShadow: `0 20px 40px -10px ${color}40`, // Stronger colored glow
@@ -29,6 +32,7 @@ const MetricCard = ({ title, value, icon: Icon, color, index }) => {
                 });
             }}
             onMouseLeave={(e) => {
+                if (onLeave) onLeave();
                 gsap.to(e.currentTarget, {
                     y: 0,
                     boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
@@ -51,6 +55,7 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
     const containerRef = useRef(null);
     const tableRef = useRef(null);
     const chartsRef = useRef(null);
+    const { setMascotMessage } = useMascot();
 
     // Safety check for uploads
     const safeUploads = Array.isArray(uploads) ? uploads : [];
@@ -186,6 +191,8 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
                     icon={UploadCloud}
                     color={theme.colors.primaryBlue}
                     index={0}
+                    onHover={() => setMascotMessage("Look at all those files! That's a lot of DNA!", 'happy')}
+                    onLeave={() => setMascotMessage('')}
                 />
                 <MetricCard
                     title="Files With ORF"
@@ -193,6 +200,8 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
                     icon={FileCode}
                     color={theme.colors.primaryPurple}
                     index={1}
+                    onHover={() => setMascotMessage("ORFs are where proteins come from! Meow!", 'happy')}
+                    onLeave={() => setMascotMessage('')}
                 />
                 <MetricCard
                     title="Avg GC%"
@@ -200,6 +209,8 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
                     icon={Activity}
                     color={theme.colors.accentCyan}
                     index={2}
+                    onHover={() => setMascotMessage("GC content tells us how stable the DNA helix is!", 'thinking')}
+                    onLeave={() => setMascotMessage('')}
                 />
                 <MetricCard
                     title="Recent Activity"
@@ -207,12 +218,19 @@ const Dashboard = ({ uploads = [], onGenerateReport }) => {
                     icon={Clock}
                     color={theme.colors.accentGreen}
                     index={3}
+                    onHover={() => setMascotMessage("You've been busy! Keep sciencing!", 'happy')}
+                    onLeave={() => setMascotMessage('')}
                 />
             </div>
 
             {/* Charts Section */}
             {totalUploads > 0 && (
-                <div ref={chartsRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+                <div
+                    ref={chartsRef}
+                    style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '2rem', marginBottom: '3rem' }}
+                    onMouseEnter={() => setMascotMessage("Visualizing data helps us spot patterns! Look at those bars!", 'happy')}
+                    onMouseLeave={() => setMascotMessage('')}
+                >
                     {/* GC Distribution Chart */}
                     <div style={{
                         ...styles.glassPanel,
