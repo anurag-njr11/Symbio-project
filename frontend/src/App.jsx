@@ -19,16 +19,14 @@ import { MascotProvider } from './contexts/MascotContext';
 gsap.registerPlugin(ScrollTrigger);
 
 const SummaryView = () => {
-  const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({ count: 0, avgGc: 0, totalBp: 0 });
 
   useEffect(() => {
-    fetchSummary();
+    fetchStats();
   }, []);
 
-  // Add Hover Styles
   const cardHoverStyle = `
     .summary-card {
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -41,13 +39,12 @@ const SummaryView = () => {
     }
   `;
 
-  const fetchSummary = async () => {
+  const fetchStats = async () => {
     try {
       const storedUser = localStorage.getItem('user');
       const user = storedUser ? JSON.parse(storedUser) : null;
       const userId = user?.id || user?._id || null;
 
-      // Fetch stats
       const url = userId ? `/api/fasta?userId=${userId}` : '/api/fasta';
       const response = await fetch(url, { headers: { 'x-user-id': userId || '' } });
       let uploads = [];
@@ -58,23 +55,9 @@ const SummaryView = () => {
         const totalBp = count > 0 ? uploads.reduce((acc, curr) => acc + curr.length, 0) : 0;
         setStats({ count, avgGc, totalBp });
       }
-
-      // Fetch AI Summary
-      const summaryResponse = await fetch('/api/summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: userId || '' })
-      });
-
-      if (summaryResponse.ok) {
-        const data = await summaryResponse.json();
-        setSummary(data.summary);
-      } else {
-        setError('Failed to generate summary');
-      }
     } catch (err) {
       console.error(err);
-      setError('An error occurred while fetching the summary');
+      setError('An error occurred while fetching statistics');
     } finally {
       setLoading(false);
     }
@@ -84,7 +67,6 @@ const SummaryView = () => {
     <div style={{ ...styles.glassPanel, padding: '3rem', minHeight: '80vh', position: 'relative', overflow: 'hidden' }}>
       <style>{cardHoverStyle}</style>
 
-      {/* Header */}
       <div className="animate-fade-in" style={{ marginBottom: '3rem', position: 'relative', zIndex: 1 }}>
         <h2 style={{
           fontSize: '2.5rem',
@@ -97,14 +79,11 @@ const SummaryView = () => {
           Project Analytics
         </h2>
         <p style={{ color: theme.colors.textMuted, fontSize: '1.1rem' }}>
-          AI-driven insights and statistics for your sequences
+          Statistical overview of your sequences
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-
-        {/* Card 1 */}
         <div className="summary-card animate-fade-in" style={{
           background: 'rgba(255, 255, 255, 0.95)',
           padding: '2rem',
@@ -127,7 +106,6 @@ const SummaryView = () => {
           </div>
         </div>
 
-        {/* Card 2 */}
         <div className="summary-card animate-fade-in" style={{
           background: 'rgba(255, 255, 255, 0.95)',
           padding: '2rem',
@@ -150,7 +128,6 @@ const SummaryView = () => {
           </div>
         </div>
 
-        {/* Card 3 */}
         <div className="summary-card animate-fade-in" style={{
           background: 'rgba(255, 255, 255, 0.95)',
           padding: '2rem',
@@ -172,60 +149,6 @@ const SummaryView = () => {
             Combined length
           </div>
         </div>
-      </div>
-
-      {/* AI Analysis Section */}
-      <div className="summary-card animate-fade-in" style={{
-        background: '#ffffff',
-        borderRadius: '24px',
-        border: `1px solid ${theme.colors.primaryPurple}`,
-        padding: '3rem',
-        boxShadow: '0 10px 30px -5px rgba(0,0,0,0.1)',
-        marginTop: '3rem',
-        opacity: 0,
-        animationDelay: '0.4s'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-          <div style={{
-            background: theme.gradients.main,
-            padding: '0.8rem',
-            borderRadius: '12px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 16px -4px rgba(37, 99, 235, 0.3)'
-          }}>
-            <Sparkles size={24} color="white" />
-          </div>
-          <h3 style={{ fontSize: '1.5rem', margin: 0, background: theme.gradients.main, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            AI Research Insights
-          </h3>
-        </div>
-
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', color: theme.colors.textMuted }}>
-            <Sparkles className="animate-spin" size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-            <div className="animate-pulse">Analyzing sequence data...</div>
-          </div>
-        ) : error ? (
-          <div style={{ color: theme.colors.accentRed, padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
-            {error}
-          </div>
-        ) : (
-          <div style={{ lineHeight: '1.8', color: '#0f172a', fontSize: '1.05rem' }}>
-            <ReactMarkdown
-              components={{
-                h1: ({ node, ...props }) => <h1 style={{ color: '#1e3a8a', marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.8rem', fontWeight: 800 }} {...props} />,
-                h2: ({ node, ...props }) => <h2 style={{ color: '#1e40af', marginTop: '1.25rem', marginBottom: '0.75rem', fontSize: '1.5rem', fontWeight: 700 }} {...props} />,
-                h3: ({ node, ...props }) => <h3 style={{ color: '#1d4ed8', marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }} {...props} />,
-                p: ({ node, ...props }) => <p style={{ marginBottom: '1rem', color: '#334155' }} {...props} />,
-                strong: ({ node, ...props }) => <strong style={{ color: '#0f172a', fontWeight: 700 }} {...props} />,
-                ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
-                li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem', color: '#334155' }} {...props} />,
-              }}
-            >
-              {summary}
-            </ReactMarkdown>
-          </div>
-        )}
       </div>
     </div>
   );
