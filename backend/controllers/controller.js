@@ -347,7 +347,7 @@ exports.chatWithBot = async (req, res) => {
         `;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        // Using gemini-2.5-flash for chat as it's good for reasoning
+        // Using gemini-2.5-flash for chat
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const result = await model.generateContent(systemPrompt);

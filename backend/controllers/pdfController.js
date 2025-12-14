@@ -1,4 +1,4 @@
-const Sequence = require('../database/Sequence');
+const Sequence = require('../models/Sequence');
 const PDFDocument = require('pdfkit');
 
 // Download metadata report as PDF file
