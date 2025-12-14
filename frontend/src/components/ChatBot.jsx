@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, HelpCircle, Cloud } from 'lucide-react';
+import { X, Send, HelpCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { theme } from '../theme';
 import gsap from 'gsap';
@@ -120,8 +120,6 @@ const ChatBot = ({ currentView }) => {
     const messagesEndRef = useRef(null);
     const botContainerRef = useRef(null);
     const thoughtRef = useRef(null);
-    const dot1Ref = useRef(null);
-    const dot2Ref = useRef(null);
     const timeoutRef = useRef(null); // Ref to track timeout for cleanup
 
     const scrollToBottom = () => {
@@ -188,6 +186,27 @@ const ChatBot = ({ currentView }) => {
         }
     }, [mascotMessage, contextEmotion]);
 
+    // React to View Changes (Navigation Greeting)
+    useEffect(() => {
+        if (isOpen) return;
+
+        const viewMessages = {
+            'dashboard': "Welcome back to base! 🏠",
+            'upload': "Time to feed me data! 🧬",
+            'reports': "Checking the archives... 📂",
+            'summary': "Let's analyze the results! 📊",
+            'view_report': "Ooh, interesting data! 🧐"
+        };
+
+        const msg = viewMessages[currentView];
+        if (msg) {
+            // Short delay to allow hover-leave to clear first
+            setTimeout(() => showThought(msg, 3000), 100);
+            setMascotEmotion('happy');
+            setTimeout(() => setMascotEmotion('idle'), 3100);
+        }
+    }, [currentView, isOpen]);
+
     // 2. Random Thoughts (Idle)
     useEffect(() => {
         if (isOpen || mascotMessage) return; // Don't random think if open or explaining something
@@ -195,15 +214,15 @@ const ChatBot = ({ currentView }) => {
         const think = () => {
             if (thoughtText || mascotEmotion !== 'idle' || mascotMessage) return;
             const text = THOUGHTS.idle[Math.floor(Math.random() * THOUGHTS.idle.length)];
-            showThought(text, 6000);
+            showThought(text, 5000);
 
             setMascotEmotion('thinking');
-            setTimeout(() => setMascotEmotion('idle'), 6000);
+            setTimeout(() => setMascotEmotion('idle'), 5000);
 
-            setTimeout(think, Math.random() * 10000 + 10000);
+            setTimeout(think, Math.random() * 8000 + 5000); // Faster loop: 5-13s
         };
 
-        const timer = setTimeout(think, 5000);
+        const timer = setTimeout(think, 3000); // Faster start: 3s
         return () => clearTimeout(timer);
     }, [isOpen, thoughtText, mascotEmotion, mascotMessage]);
 
@@ -274,11 +293,29 @@ const ChatBot = ({ currentView }) => {
             if (!response.ok) throw new Error('Failed to get response');
 
             const data = await response.json();
-            setMessages(prev => [...prev, { role: 'model', text: data.reply }]);
+
+            // Parse Emotion Tags
+            let replyText = data.reply;
+            const emotionMatch = replyText.match(/\[EMOTION:([a-z]+)\]/i);
+
+            if (emotionMatch) {
+                const emotion = emotionMatch[1].toLowerCase();
+                setMascotEmotion(emotion);
+                // Remove tag from displayed text
+                replyText = replyText.replace(/\[EMOTION:[a-z]+\]/gi, '').trim();
+
+                // Reset to idle after a delay (except for sleeping/cool which might stay longer)
+                if (emotion !== 'sleeping') {
+                    setTimeout(() => setMascotEmotion('idle'), 5000);
+                }
+            }
+
+            setMessages(prev => [...prev, { role: 'model', text: replyText }]);
         } catch (error) {
             console.error('Chat error:', error);
             setMessages(prev => [...prev, { role: 'model', text: 'I apologize, but I am having trouble connecting right now. Please try again later.' }]);
         } finally {
+            const userMessage = input.trim(); // Access captured variable
             if (!PREDEFINED_QA.find(qa => qa.question.toLowerCase() === userMessage.toLowerCase())) {
                 setIsLoading(false);
             }

@@ -41,6 +41,8 @@ const MascotAvatar = ({ emotion = 'idle', size = 64 }) => {
                 gsap.to(eyes, { scaleY: 1.4, scaleX: 1.3, duration: 0.2 }); // Wide eyes
                 gsap.to(mouth, { attr: { d: "M 45 70 Q 50 78 55 70 Q 50 62 45 70" }, duration: 0.2 }); // 'O' mouth
                 gsap.to(ears, { scale: 1.2, duration: 0.1 }); // Perked ears
+                // Jump
+                gsap.to(head, { y: -5, yoyo: true, repeat: 1, duration: 0.1 });
                 break;
             case 'dizzy':
                 gsap.set(eyes, { transformOrigin: "50% 50%" });
@@ -51,6 +53,27 @@ const MascotAvatar = ({ emotion = 'idle', size = 64 }) => {
                 gsap.to(eyes, { x: 5, y: -5, duration: 0.3 }); // Look up
                 gsap.to(mouth, { attr: { d: "M 42 70 Q 50 70 58 70" }, duration: 0.3 }); // Flat mouth
                 gsap.to(ears, { rotation: 15, duration: 0.3 }); // One ear perked
+                break;
+            case 'sleeping':
+                gsap.to(eyes, { scaleY: 0.1, duration: 0.5 }); // Closed eyes
+                gsap.to(mouth, { attr: { d: "M 45 70 Q 50 75 55 70" }, duration: 0.5 }); // Small O
+                gsap.to(head, { rotation: 10, duration: 2, yoyo: true, repeat: -1, ease: "sine.inOut" }); // Slow nod
+                // Zzz in ChatBot component handles the floating Zs usually, but icon can do slow breathe
+                gsap.to(head, { scale: 1.02, duration: 2, yoyo: true, repeat: -1, ease: "sine.inOut" });
+                break;
+            case 'confused':
+                gsap.to(eyes, { rotation: 10, scaleY: 0.8, x: 0, y: 0, duration: 0.3 });
+                gsap.to(eyesRef.current.children[0], { y: -3, duration: 0.3 }); // One eye up
+                gsap.to(eyesRef.current.children[1], { y: 2, duration: 0.3 }); // One eye down
+                gsap.to(mouth, { attr: { d: "M 40 70 Q 50 65 60 70" }, duration: 0.3 }); // Wobbly line
+                gsap.to(head, { rotation: -15, duration: 0.4 }); // Head tilt
+                break;
+            case 'cool':
+                // Cool is mostly about the sunglasses which we can toggle via opacity or render
+                // For now, let's just make it confident
+                gsap.to(eyes, { scaleY: 0.6, duration: 0.2 }); // Squint
+                gsap.to(mouth, { attr: { d: "M 40 70 Q 50 75 60 65" }, duration: 0.2 }); // Smirk
+                gsap.to(head, { y: -2, duration: 0.5, yoyo: true, repeat: -1 }); // Bob
                 break;
             default: // idle
                 gsap.to(eyes, { scaleY: 1, scaleX: 1, rotation: 0, x: 0, y: 0, duration: 0.2 });
@@ -63,7 +86,7 @@ const MascotAvatar = ({ emotion = 'idle', size = 64 }) => {
     // Blinking
     useEffect(() => {
         const blink = () => {
-            if (emotion !== 'surprised' && emotion !== 'dizzy') {
+            if (emotion !== 'surprised' && emotion !== 'dizzy' && emotion !== 'sleeping' && emotion !== 'cool') {
                 gsap.to(".cat-eye-pupil", { scaleY: 0.1, duration: 0.1, yoyo: true, repeat: 1 });
             }
             setTimeout(blink, Math.random() * 3000 + 2000);
@@ -145,6 +168,16 @@ const MascotAvatar = ({ emotion = 'idle', size = 64 }) => {
                             <circle cx="25" cy="65" r="5" fill="#fbcfe8" opacity="0.6" />
                             <circle cx="75" cy="65" r="5" fill="#fbcfe8" opacity="0.6" />
                         </>
+                    )}
+
+                    {/* Sunglasses for Cool Mode */}
+                    {emotion === 'cool' && (
+                        <g opacity="0.9">
+                            <path d="M 20 45 L 80 45 L 80 58 Q 80 65 70 65 L 65 65 Q 55 65 55 58 L 50 55 L 45 58 Q 45 65 35 65 L 30 65 Q 20 65 20 58 Z" fill="#1e293b" />
+                            <line x1="20" y1="50" x2="15" y2="45" stroke="#1e293b" strokeWidth="2" />
+                            <line x1="80" y1="50" x2="85" y2="45" stroke="#1e293b" strokeWidth="2" />
+                            <path d="M 25 50 L 40 50 L 25 60 Z" fill="rgba(255,255,255,0.2)" />
+                        </g>
                     )}
                 </g>
             </g>

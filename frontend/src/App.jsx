@@ -413,7 +413,6 @@ function App() {
       const filtered = guestUploads.filter(item => item.id !== id);
       localStorage.setItem('guestUploads', JSON.stringify(filtered));
       setUploads(prev => prev.filter(item => item.id !== id));
-      setUploads(prev => prev.filter(item => item.id !== id));
       return;
     }
 
@@ -425,7 +424,6 @@ function App() {
       });
 
       if (response.ok) {
-        setUploads(prev => prev.filter(item => item.id !== id));
         setUploads(prev => prev.filter(item => item.id !== id));
       } else {
         alert('Failed to delete');
