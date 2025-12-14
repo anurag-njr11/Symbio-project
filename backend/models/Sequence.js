@@ -37,6 +37,15 @@ const sequenceSchema = new mongoose.Schema({
         G: { type: Number, default: 0 },
         C: { type: Number, default: 0 }
     },
+    codon_frequency: {
+        type: Map,
+        of: Number,
+        default: {}
+    },
+    orf_sequence: {
+        type: String,
+        default: ''
+    },
     timestamp: {
         type: Date,
         default: Date.now

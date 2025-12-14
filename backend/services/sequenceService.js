@@ -39,25 +39,42 @@ class SequenceService {
         return (gcCount / sequence.length) * 100;
     }
 
-    // Detect Open Reading Frame (ORF)
+    // Detect Open Reading Frame (ORF) and extract sequence
     detectORF(sequence) {
         const seq = sequence.toUpperCase();
         const stops = ["TAA", "TAG", "TGA"];
 
         for (let frame = 0; frame < 3; frame++) {
             for (let i = frame; i < seq.length - 2; i += 3) {
-                if (seq.slice(i, i + 3) === "ATG") { // start codon
+                if (seq.slice(i, i + 3) === "ATG") {
                     for (let j = i + 3; j < seq.length - 2; j += 3) {
-                        if (stops.includes(seq.slice(j, j + 3))) { // in-frame stop codon
-                            return true;
+                        if (stops.includes(seq.slice(j, j + 3))) {
+                            const orfSequence = seq.slice(i, j + 3);
+                            return { detected: true, sequence: orfSequence };
                         }
                     }
                 }
             }
         }
 
-        return false;
+        return { detected: false, sequence: '' };
     }
+
+    // Calculate codon frequency
+    calculateCodonFrequency(sequence) {
+        const seq = sequence.toUpperCase();
+        const codonFreq = {};
+
+        for (let i = 0; i < seq.length - 2; i += 3) {
+            const codon = seq.slice(i, i + 3);
+            if (codon.length === 3 && !/[^ATGC]/.test(codon)) {
+                codonFreq[codon] = (codonFreq[codon] || 0) + 1;
+            }
+        }
+
+        return codonFreq;
+    }
+
 
     // Get all sequences for a user
     async getAllSequences(userId) {

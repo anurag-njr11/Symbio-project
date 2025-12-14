@@ -119,15 +119,17 @@ exports.postFasta = async (req, res) => {
         const length = sequence.length;
         const gc_percent = sequenceService.calculateGCContent(sequence);
         const nucleotide_counts = sequenceService.calculateNucleotideCounts(sequence);
-        const orf_detected = sequenceService.detectORF(sequence);
+        const orfResult = sequenceService.detectORF(sequence);
+        const codon_frequency = sequenceService.calculateCodonFrequency(sequence);
 
         // Generate AI interpretation
         const interpretation = await aiService.generateInterpretation({
             filename,
             length,
             gc_percent,
-            orf_detected,
-            nucleotide_counts
+            orf_detected: orfResult.detected,
+            nucleotide_counts,
+            codon_frequency
         });
 
         // Determine userId
@@ -142,7 +144,9 @@ exports.postFasta = async (req, res) => {
             length,
             gc_percent,
             nucleotide_counts,
-            orf_detected,
+            orf_detected: orfResult.detected,
+            orf_sequence: orfResult.sequence,
+            codon_frequency,
             interpretation,
             userId: userIdToSave
         });
