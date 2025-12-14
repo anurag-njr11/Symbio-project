@@ -200,6 +200,31 @@ const ReportView = ({ sequence, onBack }) => {
                             </div>
                         </section>
 
+                        {/* ORF Sequence - Only show if ORF detected */}
+                        {sequence.orf_detected && sequence.orf_sequence && (
+                            <section style={{ ...styles.glassPanel, padding: '2rem', boxShadow: 'none', background: 'rgba(255,255,255,0.4)', border: `1px solid ${theme.colors.borderColor}` }}>
+                                <h3 style={{ marginBottom: '1rem', color: theme.colors.accentGreen, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Zap size={20} /> Detected ORF Sequence
+                                </h3>
+                                <div style={{ marginBottom: '1rem', color: theme.colors.textMuted, fontSize: '0.9rem' }}>
+                                    Length: <strong>{sequence.orf_sequence.length} bp</strong>
+                                </div>
+                                <div style={{
+                                    background: 'rgba(0,0,0,0.02)',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.85rem',
+                                    wordBreak: 'break-all',
+                                    lineHeight: '1.6',
+                                    maxHeight: '200px',
+                                    overflowY: 'auto'
+                                }}>
+                                    {sequence.orf_sequence}
+                                </div>
+                            </section>
+                        )}
+
                     </div>
 
                     {/* Right Column: Composition Stats */}
@@ -246,18 +271,33 @@ const ReportView = ({ sequence, onBack }) => {
                             </div>
                         </section>
 
-                        {/* Dinucleotide Frequency */}
+                        {/* Codon Frequency */}
                         <section style={{ ...styles.glassPanel, padding: '1.5rem', boxShadow: 'none', background: 'rgba(255,255,255,0.4)', border: `1px solid ${theme.colors.borderColor}` }}>
-                            <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Top Dinucleotides</h3>
+                            <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Top Codon Frequency</h3>
                             <div style={{ height: '200px', width: '100%' }}>
-                                <ResponsiveContainer>
-                                    <BarChart data={dinucleotides} layout="vertical" margin={{ left: 0 }}>
-                                        <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" width={30} tick={{ fontSize: 12 }} />
-                                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                        <Bar dataKey="value" fill={theme.colors.accentCyan} radius={[0, 4, 4, 0]} barSize={15} />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                {sequence.codon_frequency && Object.keys(sequence.codon_frequency).length > 0 ? (
+                                    <ResponsiveContainer>
+                                        <BarChart
+                                            data={
+                                                Object.entries(sequence.codon_frequency)
+                                                    .sort((a, b) => b[1] - a[1])
+                                                    .slice(0, 10)
+                                                    .map(([name, value]) => ({ name, value }))
+                                            }
+                                            layout="vertical"
+                                            margin={{ left: 0 }}
+                                        >
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" width={40} tick={{ fontSize: 11 }} />
+                                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                            <Bar dataKey="value" fill={theme.colors.primaryPurple} radius={[0, 4, 4, 0]} barSize={12} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: theme.colors.textMuted }}>
+                                        No codon data available
+                                    </div>
+                                )}
                             </div>
                         </section>
 
