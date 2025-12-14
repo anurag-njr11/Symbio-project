@@ -2,12 +2,23 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 class AIService {
     constructor() {
-        this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        if (!process.env.GEMINI_API_KEY) {
+            console.error("GEMINI_API_KEY is missing in environment variables");
+            this.genAI = null;
+            this.model = null;
+        } else {
+            this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        }
     }
 
     // Generate biological interpretation for sequence
     async generateInterpretation(data) {
+        if (!this.model) {
+            console.error("Gemini API not initialized - API key missing");
+            return this.getFallbackInterpretation(data);
+        }
+
         try {
             const prompt = `
             As a bioinformatics expert, provide a concise (2-3 sentences) biological interpretation for this DNA sequence:
@@ -26,7 +37,7 @@ class AIService {
             const result = await this.model.generateContent(prompt);
             return result.response.text();
         } catch (error) {
-            console.error("AI Interpretation failed, falling back to static:", error);
+            console.error("Gemini API error:", error.message);
             return this.getFallbackInterpretation(data);
         }
     }
@@ -75,6 +86,11 @@ class AIService {
 
     // Chat with bot
     async chatWithBot(message, history, context) {
+        if (!this.model) {
+            console.error("Gemini API not initialized - API key missing");
+            return "AI service is temporarily unavailable. Meow! 😿";
+        }
+
         try {
             const systemPrompt = `
             You are "SymbioCat", the spirited and intelligent mascot for the "Symbio" genomic analysis platform.
@@ -109,8 +125,8 @@ class AIService {
             const result = await this.model.generateContent(systemPrompt);
             return result.response.text();
         } catch (error) {
-            console.error('Chatbot error:', error);
-            throw new Error('I am having trouble thinking right now.');
+            console.error("Gemini API error:", error.message);
+            return "AI service is temporarily unavailable. Meow! 😿";
         }
     }
 }
