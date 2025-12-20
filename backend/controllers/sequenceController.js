@@ -146,6 +146,9 @@ exports.postFasta = async (req, res) => {
             nucleotide_counts,
             orf_detected: orfResult.detected,
             orf_sequence: orfResult.sequence,
+            orf_start: orfResult.start,
+            orf_end: orfResult.end,
+            reading_frame: orfResult.frame,
             codon_frequency,
             interpretation,
             userId: userIdToSave
