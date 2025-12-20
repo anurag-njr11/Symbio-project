@@ -111,7 +111,7 @@ Analysis Date: ${new Date(sequence.timestamp).toLocaleString()}
 Sequence Metrics:
 -----------------
 Sequence Length: ${sequence.length} base pairs
-GC Content: ${sequence.gc_percent}%
+GC Content: ${sequence.gc_percent.toFixed(2)}%
 ORF Detected: ${sequence.orf_detected ? 'Yes' : 'No'}
 
 Nucleotide Composition:
@@ -121,6 +121,27 @@ Thymine (T): ${sequence.nucleotide_counts.T} (${((sequence.nucleotide_counts.T /
 Guanine (G): ${sequence.nucleotide_counts.G} (${((sequence.nucleotide_counts.G / sequence.length) * 100).toFixed(2)}%)
 Cytosine (C): ${sequence.nucleotide_counts.C} (${((sequence.nucleotide_counts.C / sequence.length) * 100).toFixed(2)}%)
 
+${sequence.codon_frequency && Object.keys(sequence.codon_frequency).length > 0 ? `
+Codon Frequency Analysis:
+--------------------------
+Total Unique Codons: ${Object.keys(sequence.codon_frequency).length}
+Top 10 Most Frequent Codons:
+${Object.entries(sequence.codon_frequency)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10)
+                    .map(([codon, count], index) => `${index + 1}. ${codon}: ${count} occurrences`)
+                    .join('\n')}
+` : ''}
+${sequence.orf_detected && sequence.orf_sequence ? `
+Open Reading Frame (ORF) Details:
+----------------------------------
+ORF Length: ${sequence.orf_sequence.length} bp
+Start Position: ${sequence.orf_start}
+End Position: ${sequence.orf_end}
+Reading Frame: ${sequence.reading_frame}
+ORF Sequence:
+${sequence.orf_sequence}
+` : ''}
 Biological Interpretation:
 --------------------------
 ${sequence.interpretation}
@@ -182,27 +203,58 @@ exports.postFasta = async (req, res) => {
             C: (sequence.match(/[Cc]/g) || []).length
         };
 
-        // ORF detection logic (Fix #7)
-        function detectORF(sequence) {
+        // Codon Frequency Calculation
+        function calculateCodonFrequency(sequence) {
+            const seq = sequence.toUpperCase();
+            const codonFreq = {};
+
+            // Analyze all three reading frames
+            for (let frame = 0; frame < 3; frame++) {
+                for (let i = frame; i < seq.length - 2; i += 3) {
+                    const codon = seq.slice(i, i + 3);
+                    if (codon.length === 3 && /^[ATGC]{3}$/.test(codon)) {
+                        codonFreq[codon] = (codonFreq[codon] || 0) + 1;
+                    }
+                }
+            }
+
+            return codonFreq;
+        }
+
+        // Enhanced ORF detection with sequence extraction
+        function detectORFWithDetails(sequence) {
             const seq = sequence.toUpperCase();
             const stops = ["TAA", "TAG", "TGA"];
+            let longestORF = null;
 
             for (let frame = 0; frame < 3; frame++) {
                 for (let i = frame; i < seq.length - 2; i += 3) {
                     if (seq.slice(i, i + 3) === "ATG") { // start codon
                         for (let j = i + 3; j < seq.length - 2; j += 3) {
                             if (stops.includes(seq.slice(j, j + 3))) { // in-frame stop codon
-                                return true;
+                                const orfLength = j - i + 3;
+                                if (!longestORF || orfLength > longestORF.length) {
+                                    longestORF = {
+                                        sequence: seq.slice(i, j + 3),
+                                        start: i,
+                                        end: j + 3,
+                                        frame: frame,
+                                        length: orfLength
+                                    };
+                                }
+                                break;
                             }
                         }
                     }
                 }
             }
 
-            return false;
+            return longestORF;
         }
 
-        const orf_detected = detectORF(sequence);
+        const codon_frequency = calculateCodonFrequency(sequence);
+        const orfDetails = detectORFWithDetails(sequence);
+        const orf_detected = orfDetails !== null;
 
         // Generate interpretation (Fix #9)
         const interpretation = await generateInterpretation({
@@ -225,6 +277,11 @@ exports.postFasta = async (req, res) => {
             gc_percent,
             nucleotide_counts,
             orf_detected,
+            orf_sequence: orfDetails ? orfDetails.sequence : null,
+            orf_start: orfDetails ? orfDetails.start : null,
+            orf_end: orfDetails ? orfDetails.end : null,
+            reading_frame: orfDetails ? orfDetails.frame : null,
+            codon_frequency: codon_frequency,
             interpretation,
             userId: userIdToSave  // Add userId to track ownership
         });

@@ -266,8 +266,8 @@ function App() {
         const parsedData = parseFasta(text, file.name);
         const guestUploads = JSON.parse(localStorage.getItem('guestUploads')) || [];
         const newUpload = {
-          id: Date.now().toString(),
-          _id: Date.now().toString(),
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          _id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           filename: file.name,
           ...parsedData,
           timestamp: new Date().toISOString()
@@ -276,13 +276,8 @@ function App() {
         localStorage.setItem('guestUploads', JSON.stringify(guestUploads));
         setUploads(guestUploads);
 
-        // Redirect to report
-        setPreviousView('dashboard');
-        setSelectedSequence(newUpload);
-        setActiveView('view_report');
-
         setIsProcessing(false);
-        return;
+        return newUpload;
       }
 
       // For registered users
@@ -310,18 +305,13 @@ function App() {
       };
 
       setUploads(prev => [newUpload, ...prev]);
-
-      // Redirect to report
-      setPreviousView('dashboard');
-      setSelectedSequence(newUpload);
-      setActiveView('view_report');
-      setActiveView('view_report');
+      setIsProcessing(false);
+      return newUpload;
 
     } catch (error) {
       console.error("Failed to upload file", error);
-      alert("Failed to upload file");
-    } finally {
       setIsProcessing(false);
+      throw error;
     }
   };
 

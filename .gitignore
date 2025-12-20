@@ -35,3 +35,8 @@ build/
 # Temporary files
 tmp/
 temp/
+
+# Test files
+backend/test-env.js
+backend/test-gemini-api.js
+backend/test-*.js

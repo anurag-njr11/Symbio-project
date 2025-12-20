@@ -27,6 +27,27 @@ const sequenceSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  orf_sequence: {
+    type: String,
+    default: null
+  },
+  orf_start: {
+    type: Number,
+    default: null
+  },
+  orf_end: {
+    type: Number,
+    default: null
+  },
+  reading_frame: {
+    type: Number,
+    default: null
+  },
+  codon_frequency: {
+    type: Map,
+    of: Number,
+    default: () => new Map()
+  },
   interpretation: {
     type: String,
     default: ''
@@ -55,4 +76,4 @@ sequenceSchema.index({ timestamp: -1 });  // Fast recent uploads
 sequenceSchema.index({ filename: 1 });    // Fast filename search
 sequenceSchema.index({ header: 1 });      // Fast header search
 
-module.exports = mongoose.model('Sequence', sequenceSchema);
+module.exports = mongoose.models.Sequence || mongoose.model('Sequence', sequenceSchema);

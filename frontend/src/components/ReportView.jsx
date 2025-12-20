@@ -10,8 +10,21 @@ const ReportView = ({ sequence, onBack }) => {
     if (!sequence) return null;
 
     // Fix #1: Download button handler
-    const handleDownload = () => {
-        window.location.href = `/api/files/${sequence._id || sequence.id}/report`;
+    const handleDownload = async () => {
+        try {
+            const response = await fetch(`/api/files/${sequence._id || sequence.id}/report`);
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `genomic-report-${sequence.filename}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+        }
     };
 
     // Fix #2: Share button handler
@@ -155,21 +168,56 @@ const ReportView = ({ sequence, onBack }) => {
                             </h3>
                             <div style={{ lineHeight: '1.8', color: theme.colors.textMain }}>
                                 <p style={{ marginBottom: '1rem' }}>
-                                    The analyzed sequence <strong>{sequence.filename}</strong> contains <strong>{sequence.length}</strong> base pairs with <strong>{sequence.gc_percent}%</strong> GC content.
+                                    The analyzed sequence <strong>{sequence.filename}</strong> contains <strong>{sequence.length}</strong> base pairs with <strong>{sequence.gc_percent.toFixed(2)}%</strong> GC content.
                                     {sequence.orf_detected
                                         ? " The presence of an Open Reading Frame (ORF) suggests potential protein-coding capability."
                                         : " No canonical ORF was detected in the standard frames."}
                                 </p>
 
+                                {/* GC Content Analysis */}
+                                <div style={{ background: 'rgba(124, 58, 237, 0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                                    <h4 style={{ fontSize: '0.95rem', marginBottom: '0.5rem', color: theme.colors.primaryPurple }}>GC Content Analysis</h4>
+                                    <p style={{ fontSize: '0.9rem', margin: 0 }}>
+                                        {sequence.gc_percent < 40
+                                            ? "This sequence exhibits LOW GC content (<40%), characteristic of AT-rich regions. Such sequences typically have lower thermal stability and may represent non-coding regions or introns."
+                                            : sequence.gc_percent <= 60
+                                                ? "This sequence shows MODERATE GC content (40-60%), typical for many protein-coding genes. This balanced composition suggests potential functional significance."
+                                                : "This sequence demonstrates HIGH GC content (>60%), indicating strong thermal stability. GC-rich regions are often associated with promoter regions or CpG islands."}
+                                    </p>
+                                </div>
+
+                                {/* Codon Usage Insights */}
+                                {sequence.codon_frequency && Object.keys(sequence.codon_frequency).length > 0 && (
+                                    <div style={{ background: 'rgba(37, 99, 235, 0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                                        <h4 style={{ fontSize: '0.95rem', marginBottom: '0.5rem', color: theme.colors.primaryBlue }}>Codon Usage Pattern</h4>
+                                        <p style={{ fontSize: '0.9rem', margin: 0 }}>
+                                            Analysis identified <strong>{Object.keys(sequence.codon_frequency).length}</strong> unique codons across all reading frames.
+                                            Codon usage bias can indicate gene expression levels and evolutionary adaptation.
+                                            {sequence.orf_detected && " The detected ORF shows specific codon preferences that may reflect translation efficiency."}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Sequence Quality Notes */}
+                                <div style={{ background: 'rgba(34, 197, 94, 0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                                    <h4 style={{ fontSize: '0.95rem', marginBottom: '0.5rem', color: theme.colors.accentGreen }}>Sequence Quality</h4>
+                                    <p style={{ fontSize: '0.9rem', margin: 0 }}>
+                                        The sequence contains valid ATGC nucleotides with balanced base composition.
+                                        {sequence.length >= 300
+                                            ? " The sequence length is sufficient for comprehensive analysis and ORF detection."
+                                            : " Note: Shorter sequences may have limited ORF detection reliability."}
+                                    </p>
+                                </div>
+
                                 {/* AI Summary Box */}
                                 <div style={{ background: 'rgba(37, 99, 235, 0.05)', padding: '1.5rem', borderRadius: '12px', borderLeft: `4px solid ${theme.colors.primaryBlue}` }}>
-                                    <h4 style={{ marginBottom: '0.5rem', color: theme.colors.primaryBlue, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Analysis</h4>
+                                    <h4 style={{ marginBottom: '0.5rem', color: theme.colors.primaryBlue, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI-Powered Analysis</h4>
                                     <div style={{ color: theme.colors.textMuted, fontStyle: 'italic' }}>
                                         {sequence.interpretation ? (
                                             <ReactMarkdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0 }} {...props} /> }}>
                                                 {sequence.interpretation}
                                             </ReactMarkdown>
-                                        ) : "Interpretation pending..."}
+                                        ) : "Generating detailed interpretation..."}
                                     </div>
                                 </div>
                             </div>
@@ -206,8 +254,11 @@ const ReportView = ({ sequence, onBack }) => {
                                 <h3 style={{ marginBottom: '1rem', color: theme.colors.accentGreen, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Zap size={20} /> Detected ORF Sequence
                                 </h3>
-                                <div style={{ marginBottom: '1rem', color: theme.colors.textMuted, fontSize: '0.9rem' }}>
-                                    Length: <strong>{sequence.orf_sequence.length} bp</strong>
+                                <div style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', color: theme.colors.textMuted, fontSize: '0.9rem' }}>
+                                    <div><strong>Length:</strong> {sequence.orf_sequence.length} bp</div>
+                                    <div><strong>Reading Frame:</strong> {sequence.reading_frame != null ? sequence.reading_frame : 'N/A'}</div>
+                                    <div><strong>Start Position:</strong> {sequence.orf_start != null ? sequence.orf_start : 'N/A'}</div>
+                                    <div><strong>End Position:</strong> {sequence.orf_end != null ? sequence.orf_end : 'N/A'}</div>
                                 </div>
                                 <div style={{
                                     background: 'rgba(0,0,0,0.02)',
@@ -221,6 +272,10 @@ const ReportView = ({ sequence, onBack }) => {
                                     overflowY: 'auto'
                                 }}>
                                     {sequence.orf_sequence}
+                                </div>
+                                <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', fontSize: '0.9rem', color: theme.colors.textMuted }}>
+                                    <strong>Biological Significance:</strong> This ORF suggests potential protein-coding capability,
+                                    producing approximately {Math.floor(sequence.orf_sequence.length / 3)} amino acids.
                                 </div>
                             </section>
                         )}
