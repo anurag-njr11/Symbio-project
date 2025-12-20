@@ -197,17 +197,26 @@ exports.deleteById = async (req, res) => {
     }
 };
 
-// Generate AI summary
+// Get detailed summary of the latest file
 exports.generateSummary = async (req, res) => {
     try {
         const userId = req.query.userId || req.headers['x-user-id'] || null;
+
+        // Get the single most recent sequence
         const sequences = await sequenceService.getRecentSequences(userId);
 
-        const summary = await aiService.generateSummary(sequences);
+        if (!sequences || sequences.length === 0) {
+            return res.status(200).json({ summary: "No sequences found. Upload a file to see insights." });
+        }
+
+        const latestSequence = sequences[0];
+        // Use detailed_summary if available, otherwise fallback to interpretation
+        const summary = latestSequence.detailed_summary || latestSequence.interpretation || "Analysis unavailable.";
+
         res.status(200).json({ summary });
     } catch (error) {
-        console.error('Error generating summary:', error);
-        res.status(500).json({ message: 'Failed to generate summary', error: error.message });
+        console.error('Error getting summary:', error);
+        res.status(500).json({ message: 'Failed to retrieve summary', error: error.message });
     }
 };
 
