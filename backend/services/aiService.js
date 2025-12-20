@@ -10,21 +10,31 @@ class AIService {
     async generateInterpretation(data) {
         try {
             const prompt = `
-            As a bioinformatics expert, provide a concise (2-3 sentences) biological interpretation for this DNA sequence:
-            
+            As a bioinformatics expert, analyze this DNA sequence and provide two summaries in JSON format: 
+            1. "concise": A short summary suitable for a dashboard card.
+            2. "detailed": A comprehensive biological summary including molecule type, potential species, and codon usage observations. Provide this as a continuous text narrative/paragraph, NOT a nested object.
+
+            Data:
             Filename: ${data.filename}
             Length: ${data.length} bp
             GC Content: ${data.gc_percent.toFixed(2)}%
             ORF Detected: ${data.orf_detected ? 'Yes' : 'No'}
             Nucleotide Counts: A=${data.nucleotide_counts.A}, T=${data.nucleotide_counts.T}, G=${data.nucleotide_counts.G}, C=${data.nucleotide_counts.C}
-            Also give details if it is a gene, Rna, Dna etc. or if it belongs to particular species
+            Codon Counts: ${JSON.stringify(data.codon_counts)}
 
-            Explain what the GC content implies about stability and what the ORF status suggests about coding potential. 
-            Do not use markdown headers or bullet points, just a paragraph.
+            Return ONLY raw JSON, no markdown formatting.
+            {
+                "concise": "...",
+                "detailed": "..."
+            }
             `;
 
             const result = await this.model.generateContent(prompt);
-            return result.response.text();
+            const textBuffer = result.response.text();
+
+            // Clean up code blocks if present
+            const jsonStr = textBuffer.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(jsonStr);
         } catch (error) {
             console.error("AI Interpretation failed, falling back to static:", error);
             return this.getFallbackInterpretation(data);
@@ -42,7 +52,10 @@ class AIService {
         } else {
             text += "A valid ORF was detected, suggesting a potential protein-coding region.";
         }
-        return text;
+        return {
+            concise: text,
+            detailed: text + " (Detailed analysis unavailable)"
+        };
     }
 
     // Generate summary of sequences

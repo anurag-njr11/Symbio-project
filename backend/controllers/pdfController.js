@@ -54,11 +54,39 @@ exports.downloadReportPDF = async (req, res) => {
         doc.text(`Cytosine (C): ${sequence.nucleotide_counts.C} (${((sequence.nucleotide_counts.C / sequence.length) * 100).toFixed(2)}%)`);
         doc.moveDown(2);
 
-        // Biological Interpretation
-        doc.fontSize(14).text('Biological Interpretation:', { underline: true });
+        // Biological Interpretation (Detailed Summary)
+        doc.fontSize(14).text('Detailed Biological Summary:', { underline: true });
         doc.moveDown(0.5);
-        doc.fontSize(11).text(sequence.interpretation, { align: 'justify' });
+        // Use detailed_summary if available, otherwise fallback to interpretation
+        const summaryText = sequence.detailed_summary || sequence.interpretation;
+        doc.fontSize(11).text(summaryText, { align: 'justify' });
         doc.moveDown(2);
+
+        // Codon Usage
+        doc.fontSize(14).text('Codon Usage Counts:', { underline: true });
+        doc.moveDown(0.5);
+
+        const codons = sequence.codon_counts ? (sequence.codon_counts instanceof Map ? Object.fromEntries(sequence.codon_counts) : sequence.codon_counts) : {};
+        const codonKeys = Object.keys(codons).sort();
+
+        let codonText = "";
+        codonKeys.forEach((codon, index) => {
+            codonText += `${codon}: ${codons[codon]}   `;
+            if ((index + 1) % 6 === 0) codonText += "\n";
+        });
+
+        doc.fontSize(10).font('Courier').text(codonText || "No codon data available.");
+        doc.font('Helvetica'); // Reset font
+        doc.moveDown(2);
+
+        // ORF Sequence
+        if (sequence.orf_detected && sequence.orf_sequence) {
+            doc.fontSize(14).text('Detected ORF Sequence:', { underline: true });
+            doc.moveDown(0.5);
+            doc.fontSize(10).font('Courier').text(sequence.orf_sequence, { width: 500, align: 'justify' });
+            doc.font('Helvetica');
+            doc.moveDown(2);
+        }
 
         doc.fontSize(10).text('='.repeat(70), { align: 'center' });
         doc.text('End of Report', { align: 'center' });

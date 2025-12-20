@@ -23,7 +23,6 @@ class SequenceService {
         return { header, sequence };
     }
 
-    // Calculate nucleotide counts
     calculateNucleotideCounts(sequence) {
         return {
             A: (sequence.match(/[Aa]/g) || []).length,
@@ -33,30 +32,52 @@ class SequenceService {
         };
     }
 
+    // Calculate Codon Counts
+    calculateCodonCounts(sequence) {
+        const codons = {};
+        const cleanSequence = sequence.toUpperCase().replace(/[^ATGC]/g, '');
+
+        for (let i = 0; i < cleanSequence.length - 2; i += 3) {
+            const codon = cleanSequence.slice(i, i + 3);
+            codons[codon] = (codons[codon] || 0) + 1;
+        }
+        return codons;
+    }
+
     // Calculate GC content
     calculateGCContent(sequence) {
         const gcCount = (sequence.match(/[GCgc]/g) || []).length;
         return (gcCount / sequence.length) * 100;
     }
 
-    // Detect Open Reading Frame (ORF)
+    // Detect Open Reading Frame (ORF) and return sequence
     detectORF(sequence) {
         const seq = sequence.toUpperCase();
         const stops = ["TAA", "TAG", "TGA"];
+        let longestOrf = "";
+        let found = false;
 
         for (let frame = 0; frame < 3; frame++) {
             for (let i = frame; i < seq.length - 2; i += 3) {
                 if (seq.slice(i, i + 3) === "ATG") { // start codon
                     for (let j = i + 3; j < seq.length - 2; j += 3) {
-                        if (stops.includes(seq.slice(j, j + 3))) { // in-frame stop codon
-                            return true;
+                        const codon = seq.slice(j, j + 3);
+                        if (stops.includes(codon)) { // in-frame stop codon
+                            const orfLen = (j + 3) - i;
+                            const currentOrf = seq.substring(i, j + 3);
+
+                            if (currentOrf.length > longestOrf.length) {
+                                longestOrf = currentOrf;
+                                found = true;
+                            }
+                            break; // Stop searching this start codon, move to next
                         }
                     }
                 }
             }
         }
 
-        return false;
+        return { detected: found, sequence: longestOrf || "" };
     }
 
     // Get all sequences for a user

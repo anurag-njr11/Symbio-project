@@ -31,6 +31,10 @@ const sequenceSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    detailed_summary: {
+        type: String,
+        default: ''
+    },
     nucleotide_counts: {
         A: { type: Number, default: 0 },
         T: { type: Number, default: 0 },
@@ -40,6 +44,15 @@ const sequenceSchema = new mongoose.Schema({
     timestamp: {
         type: Date,
         default: Date.now
+    },
+    codon_counts: {
+        type: Map,
+        of: Number,
+        default: {}
+    },
+    orf_sequence: {
+        type: String,
+        default: ''
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,

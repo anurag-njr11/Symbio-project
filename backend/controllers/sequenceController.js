@@ -119,16 +119,34 @@ exports.postFasta = async (req, res) => {
         const length = sequence.length;
         const gc_percent = sequenceService.calculateGCContent(sequence);
         const nucleotide_counts = sequenceService.calculateNucleotideCounts(sequence);
-        const orf_detected = sequenceService.detectORF(sequence);
+        const codon_counts = sequenceService.calculateCodonCounts(sequence);
+        const orfResult = sequenceService.detectORF(sequence);
+        const orf_detected = orfResult.detected;
+        const orf_sequence = orfResult.sequence;
 
         // Generate AI interpretation
-        const interpretation = await aiService.generateInterpretation({
-            filename,
-            length,
-            gc_percent,
-            orf_detected,
-            nucleotide_counts
-        });
+        let interpretationText = "";
+        let detailedSummaryText = "";
+
+        try {
+            const aiResult = await aiService.generateInterpretation({
+                filename,
+                length,
+                gc_percent,
+                orf_detected,
+                nucleotide_counts,
+                codon_counts
+            });
+            interpretationText = aiResult.concise;
+            // Ensure detailed summary is a string (handle case where AI returns object)
+            detailedSummaryText = typeof aiResult.detailed === 'object'
+                ? JSON.stringify(aiResult.detailed, null, 2)
+                : aiResult.detailed;
+        } catch (e) {
+            console.error("AI generation error:", e);
+            interpretationText = "AI Analysis Unavailable";
+            detailedSummaryText = "AI Analysis Unavailable";
+        }
 
         // Determine userId
         const finalUserId = userId || req.headers['x-user-id'] || req.query.userId || null;
@@ -142,8 +160,11 @@ exports.postFasta = async (req, res) => {
             length,
             gc_percent,
             nucleotide_counts,
+            codon_counts,
             orf_detected,
-            interpretation,
+            orf_sequence,
+            interpretation: interpretationText,
+            detailed_summary: detailedSummaryText,
             userId: userIdToSave
         });
 
