@@ -58,18 +58,24 @@ const drawNucleotideChart = (doc, nucleotideCounts, total, startY) => {
     const barHeight = 25;
     const startX = 150;
 
-    doc.fontSize(12).fillColor('#000').text('Nucleotide Distribution', startX + 20, startY - 20);
+    // Title at explicit startY (no negative offset)
+    doc.fontSize(12).fillColor('#000').text('Nucleotide Distribution', startX + 20, startY);
+
+    const chartContentStart = startY + 30; // Space below title
 
     bases.forEach((base, index) => {
         const count = nucleotideCounts[base] || 0;
         const percentage = (count / total) * 100;
         const barWidth = (count / total) * maxBarWidth;
-        const y = startY + (index * 35);
+        const y = chartContentStart + (index * 35);
 
         doc.rect(startX, y, barWidth, barHeight).fillColor(colors[index]).fill();
         doc.fillColor('#000').fontSize(14).text(base, startX - 30, y + 6);
         doc.text(`${count} (${percentage.toFixed(1)}%)`, startX + maxBarWidth + 10, y + 6);
     });
+
+    // Return the Y position where the chart ends
+    return chartContentStart + (bases.length * 35);
 };
 
 const drawCodonChart = (doc, codonData, startY) => {
@@ -79,17 +85,22 @@ const drawCodonChart = (doc, codonData, startY) => {
     const top10 = codonData.slice(0, 10);
     const maxCount = top10[0]?.count || 1;
 
-    doc.fontSize(12).fillColor('#000').text('Top 10 Codon Frequencies', startX - 50, startY - 20);
+    // Title at explicit startY
+    doc.fontSize(12).fillColor('#000').text('Top 10 Codon Frequencies', startX - 50, startY);
+
+    const chartContentStart = startY + 30;
 
     top10.forEach((item, index) => {
         const barWidth = (item.count / maxCount) * maxBarWidth;
-        const y = startY + (index * 24);
+        const y = chartContentStart + (index * 24);
 
         doc.rect(startX, y, barWidth, barHeight).fillColor('#6366f1').fill();
         doc.fillColor('#000').fontSize(11);
         doc.text(`${item.codon} (${item.aminoAcid})`, startX - 100, y + 3, { width: 95, align: 'right' });
         doc.text(`${item.count} (${item.percentage}%)`, startX + maxBarWidth + 5, y + 3);
     });
+
+    return chartContentStart + (top10.length * 24);
 };
 
 exports.downloadReportPDF = async (req, res) => {
@@ -149,8 +160,9 @@ exports.downloadReportPDF = async (req, res) => {
         doc.fontSize(16).text('NUCLEOTIDE COMPOSITION ANALYSIS', { underline: true });
         doc.moveDown(0.3);
 
-        drawNucleotideChart(doc, nucleotideCounts, length, doc.y + 10);
-        doc.moveDown(10);
+        const nucChartEndY = drawNucleotideChart(doc, nucleotideCounts, length, doc.y);
+        doc.y = nucChartEndY + 20; // Explicitly set Y below the chart with padding
+        doc.x = 50; // Reset X to margin to prevent text overflow
 
         const atContent = ((nucleotideCounts.A + nucleotideCounts.T) / length * 100).toFixed(2);
         const purineContent = ((nucleotideCounts.A + nucleotideCounts.G) / length * 100).toFixed(2);
@@ -159,7 +171,10 @@ exports.downloadReportPDF = async (req, res) => {
         const nucText = `The sequence exhibits ${atContent}% AT content versus ${gcPercent.toFixed(2)}% GC content, with purine bases (adenine and guanine) comprising ${purineContent}% and pyrimidine bases (thymine and cytosine) comprising ${pyrimidineContent}% of the total composition. ${gcPercent < 40 ? 'Low GC content is characteristic of AT-rich genomic regions, typically associated with reduced thermal stability of DNA duplexes, lower melting temperatures, and potential localization in non-coding sequences, introns, or intergenic regions. Such composition may reflect evolutionary adaptation to specific environmental conditions or functional constraints.' : gcPercent <= 60 ? 'Moderate GC content is typical of protein-coding genes in many eukaryotic organisms, providing balanced thermal stability and optimal conditions for transcription and translation. This composition suggests potential functional significance and is consistent with actively transcribed genomic regions.' : 'High GC content indicates strong thermal stability of DNA duplexes, elevated melting temperatures, and potential association with promoter regions, CpG islands, or genomes from thermophilic organisms. GC-rich regions often exhibit distinct chromatin structures and may influence gene regulation through effects on DNA methylation and nucleosome positioning.'}`;
         doc.fontSize(14).text(nucText, { align: 'justify', width: 495 });
 
-        doc.addPage();
+        // Ensure we don't start a new page just for the header if we're near the bottom
+        if (doc.y > 650) doc.addPage();
+        else doc.moveDown(2); // Add some space if we are continuing on same page
+
         doc.fontSize(16).text('CODON FREQUENCY AND USAGE BIAS', { underline: true });
         doc.moveDown(0.3);
         doc.fontSize(14).text(`Total Codons: ${totalCodons.toLocaleString()} | Unique Codons: ${uniqueCodons}`, { align: 'justify' });
@@ -202,8 +217,9 @@ exports.downloadReportPDF = async (req, res) => {
             }
 
             doc.moveDown(0.6);
-            drawCodonChart(doc, codonData, doc.y + 10);
-            doc.moveDown(16);
+            const codonChartEndY = drawCodonChart(doc, codonData, doc.y);
+            doc.y = codonChartEndY + 20;
+            doc.x = 50; // Reset X to margin
 
             const codonText = `Codon usage bias reflects the non-random utilization of synonymous codons during translation, influenced by tRNA abundance, translation efficiency, and evolutionary optimization. The genetic code's degeneracy allows multiple codons to encode the same amino acid, yet highly expressed genes exhibit strong preferences for specific synonymous codons that correspond to abundant tRNA species. In this sequence, the observed codon distribution reveals ${codonData[0].codon} as the most frequent codon (${codonData[0].percentage}%), encoding ${codonData[0].aminoAcid}. The presence of start codons (ATG) and stop codons (TAA, TAG, TGA) delineates potential open reading frames and translation termination sites. Deviations from expected codon frequencies may indicate recent horizontal gene transfer, artificial codon optimization, or species-specific translation machinery adaptations.`;
             doc.fontSize(14).text(codonText, { align: 'justify', width: 495 });
