@@ -1,4 +1,4 @@
-const Sequence = require('../models/Sequence');
+const Sequence = require('../database/Sequence');
 
 class SequenceService {
     // Validate FASTA format
@@ -47,17 +47,23 @@ class SequenceService {
         for (let frame = 0; frame < 3; frame++) {
             for (let i = frame; i < seq.length - 2; i += 3) {
                 if (seq.slice(i, i + 3) === "ATG") {
-                    for (let j = i + 3; j < seq.length - 2; j += 3) {
+                    for (let j = i + 3; j <= seq.length - 3; j += 3) {
                         if (stops.includes(seq.slice(j, j + 3))) {
                             const orfSequence = seq.slice(i, j + 3);
-                            return { detected: true, sequence: orfSequence };
+                            return {
+                                detected: true,
+                                sequence: orfSequence,
+                                start: i + 1,
+                                end: j + 3,
+                                frame: `+${frame + 1}`
+                            };
                         }
                     }
                 }
             }
         }
 
-        return { detected: false, sequence: '' };
+        return { detected: false, sequence: '', start: null, end: null, frame: null };
     }
 
     // Calculate codon frequency

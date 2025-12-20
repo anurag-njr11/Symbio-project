@@ -230,7 +230,7 @@ exports.postFasta = async (req, res) => {
             for (let frame = 0; frame < 3; frame++) {
                 for (let i = frame; i < seq.length - 2; i += 3) {
                     if (seq.slice(i, i + 3) === "ATG") { // start codon
-                        for (let j = i + 3; j < seq.length - 2; j += 3) {
+                        for (let j = i + 3; j <= seq.length - 3; j += 3) {
                             if (stops.includes(seq.slice(j, j + 3))) { // in-frame stop codon
                                 const orfLength = j - i + 3;
                                 if (!longestORF || orfLength > longestORF.length) {
@@ -278,9 +278,9 @@ exports.postFasta = async (req, res) => {
             nucleotide_counts,
             orf_detected,
             orf_sequence: orfDetails ? orfDetails.sequence : null,
-            orf_start: orfDetails ? orfDetails.start : null,
+            orf_start: orfDetails ? orfDetails.start + 1 : null,
             orf_end: orfDetails ? orfDetails.end : null,
-            reading_frame: orfDetails ? orfDetails.frame : null,
+            reading_frame: orfDetails ? `+${orfDetails.frame + 1}` : null,
             codon_frequency: codon_frequency,
             interpretation,
             userId: userIdToSave  // Add userId to track ownership

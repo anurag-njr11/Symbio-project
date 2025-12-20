@@ -46,6 +46,18 @@ const sequenceSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    orf_start: {
+        type: Number,
+        default: null
+    },
+    orf_end: {
+        type: Number,
+        default: null
+    },
+    reading_frame: {
+        type: String,
+        default: null
+    },
     timestamp: {
         type: Date,
         default: Date.now

@@ -40,7 +40,7 @@ const sequenceSchema = new mongoose.Schema({
     default: null
   },
   reading_frame: {
-    type: Number,
+    type: String,
     default: null
   },
   codon_frequency: {
