@@ -85,15 +85,6 @@ MongoDB stores:
 * OAuth credentials
 * Timestamps
 
-Users authenticate via email-password or:
-
-* Google OAuth
-* Microsoft OAuth
-* GitHub OAuth
-
-OAuth implementations handled via Passport.js strategies
-(Example: Google/GitHub/Microsoft strategy setup )
-
 ---
 
 # 📊 **4. Interactive Genomic Dashboard (PowerBI-Style)**
@@ -176,7 +167,7 @@ Users can convert sequence metadata + AI summaries into a well-formatted **PDF r
 Full authentication stack includes:
 
 * JWT
-* OAuth (Google / Microsoft / GitHub)
+* OAuth
 * Secure password hashing
 * Session management
 * Protected routes
